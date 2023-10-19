@@ -5,7 +5,7 @@ defmodule KinoK8s.GETCell do
 
   @impl true
   def init(attrs, ctx) do
-    kubeconfig = System.get_env("LB_KUBECONFIG")
+    kubeconfig = System.get_env("KUBECONFIG")
     ctx = assign(ctx, mix_env: Mix.env())
 
     cond do
@@ -13,14 +13,14 @@ defmodule KinoK8s.GETCell do
         {:ok,
          assign(ctx,
            error:
-             "KUBECONFIG is not defined. You have to define a secret called KUBECONFIG pointing to the kube config file."
+             "KUBECONFIG is not defined. You have to define an ENV variable called KUBECONFIG pointing to the kube config file."
          )}
 
       not File.exists?(kubeconfig) ->
         {:ok,
          assign(ctx,
            error:
-             "The file #{kubeconfig} defined by the KBUECONFIG secret was not found on your system."
+             "The file #{kubeconfig} defined by the KBUECONFIG ENV variable was not found on your system."
          )}
 
       :otherwise ->
@@ -30,11 +30,31 @@ defmodule KinoK8s.GETCell do
 
   @impl true
   def handle_connect(ctx) do
-    {:ok, ctx.assigns, ctx}
+    {:ok, get_js_attrs(ctx), ctx}
+  end
+
+  @impl true
+  def handle_event("update_search_term", value, ctx) do
+    {
+      :noreply,
+      ctx
+      |> assign(search_term: value)
+      |> assign(search_result_timestamp: :os.system_time(:second))
+      |> broadcast_update()
+    }
+  end
+
+  defp broadcast_update(ctx) do
+    broadcast_event(ctx, "update", get_js_attrs(ctx))
+    ctx
   end
 
   @impl true
   def to_attrs(ctx) do
+    ctx.assigns
+  end
+
+  defp get_js_attrs(ctx) do
     ctx.assigns
   end
 

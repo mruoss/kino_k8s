@@ -1,4 +1,4 @@
 export interface GETCellAttrs {
-  mix_env: string;
-  error?: string;
+  mix_env: string
+  error?: string
 }

@@ -1,5 +1,5 @@
 interface ErrorProps {
-  message: string;
+  message: string
 }
 const Error = ({ message }: ErrorProps) => (
   <>
@@ -23,6 +23,6 @@ const Error = ({ message }: ErrorProps) => (
       </div>
     </div>
   </>
-);
+)
 
-export default Error;
+export default Error
