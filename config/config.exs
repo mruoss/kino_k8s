@@ -1,7 +1,6 @@
 import Config
 
 config :esbuild,
-  version: "0.18.6",
   default: [
     args:
       ~w(assets/get_cell/main.tsx --external:react --external:react-dom/client --entry-names=[dir]/[name] --outbase=assets --outdir=lib/assets --target=es2020 --format=esm --bundle)
