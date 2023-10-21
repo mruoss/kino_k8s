@@ -7,6 +7,9 @@ defmodule KinoK8s.Application do
   def start(_type, _args) do
     Kino.SmartCell.register(KinoK8s.GETCell)
 
-    Supervisor.start_link([], strategy: :one_for_one, name: KinoDB.Supervisor)
+    Supervisor.start_link([KinoK8s.ResourceCache],
+      strategy: :one_for_one,
+      name: KinoK8s.Supervisor
+    )
   end
 end
