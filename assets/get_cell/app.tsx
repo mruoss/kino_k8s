@@ -2,7 +2,8 @@ import { GETCellAttrs } from './types'
 import { KinoContext } from '../kino'
 import { useAttrsState } from '../shared/app'
 import Select from '../shared/form/select'
-import Search from '../shared/form/search'
+import SearchSelect from '../shared/form/search_select'
+import { ResourceOption } from './resource'
 
 interface AppProps {
   initialAttrs: GETCellAttrs
@@ -23,12 +24,19 @@ const App = ({ initialAttrs, ctx }: AppProps) => {
         />
       </div>
       <div>
-        <Search
+        <SearchSelect
+          className="max-w-full pl-3 w-80"
           name="resource"
           label="Resource"
           onSearch={updateAttr('search_term')}
           searchTerm={attrs['search_term']}
           searchResultTimestamp={attrs['search_result_timestamp']}
+          resultItems={attrs['search_result_items']}
+          onSelect={updateAttr('resource')}
+          itemRenderer={(item) => (
+            <ResourceOption key={item.index} resource={item} />
+          )}
+          selectedItem={attrs['resource']}
         />
       </div>
     </>

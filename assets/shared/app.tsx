@@ -16,7 +16,7 @@ export const useAttrsState = <AttrsType extends {}>(
 
   React.useEffect(() => {
     ctx.handleEvent<AttrsType>('update', (updates) => {
-      console.log('michi', updates)
+      console.log('Attribute update from server', updates)
       setAttrs((attrs) => ({
         ...Object.assign(attrs, updates),
       }))

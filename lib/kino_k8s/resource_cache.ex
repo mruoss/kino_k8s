@@ -70,7 +70,8 @@ defmodule KinoK8s.ResourceCache do
             api_version: api_version,
             name: resource["name"],
             kind: resource["kind"],
-            namespaced: resource["namespaced"]
+            namespaced: resource["namespaced"],
+            resource: resource
           }
         end
 
