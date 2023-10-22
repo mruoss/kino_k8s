@@ -36,7 +36,7 @@ const App = ({ initialAttrs, ctx }: AppProps) => {
           itemRenderer={(item) => (
             <ResourceOption key={item.index} resource={item} />
           )}
-          selectedItem={attrs['resource']}
+          selectedValue={attrs['resource']?.kind}
         />
       </div>
     </>

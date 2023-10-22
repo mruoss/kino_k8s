@@ -34,23 +34,30 @@ defmodule KinoK8s.GETCell do
     {:ok, get_js_attrs(ctx), ctx}
   end
 
+  @impl true
   def handle_event("update_search_term", search_term, ctx) do
-    {
-      :noreply,
-      ctx
-      |> assign(resource: nil)
-      |> assign(search_term: search_term)
-      |> assign(search_result_timestamp: :os.system_time(:second))
-      |> assign(search_result_items: perform_search(search_term))
-      |> broadcast_update()
-    }
+    case perform_search(search_term) do
+      [resource] ->
+        handle_event("update_resource", resource, ctx)
+
+      search_result_items ->
+        ctx =
+          assign(ctx,
+            resource: nil,
+            search_term: search_term,
+            search_result_items: search_result_items
+          )
+
+        send_event(ctx, ctx.origin, "update", get_js_attrs(ctx))
+
+        {:noreply, ctx}
+    end
   end
 
   def handle_event("update_resource", resource, ctx) do
     {:noreply,
      ctx
-     |> assign(resource: resource)
-     |> assign(search_result_items: [])
+     |> assign(resource: resource, search_result_items: [])
      |> broadcast_update()}
   end
 

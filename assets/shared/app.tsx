@@ -11,6 +11,7 @@ export const useAttrsState = <AttrsType extends {}>(
 ): [AttrsType, UpdateAttrFun<AttrsType>] => {
   const [attrs, setAttrs] = React.useState<AttrsType>(initialAttrs)
   const updateAttr: UpdateAttrFun<AttrsType> = (attrName) => (attrValue) => {
+    setAttrs((attrs) => ({ ...attrs, [attrName]: attrValue }))
     ctx.pushEvent(`update_${attrName}`, attrValue)
   }
 

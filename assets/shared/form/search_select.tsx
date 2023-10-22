@@ -3,17 +3,18 @@ import debounce from 'debounce'
 
 const SearchInput = ({
   name,
-
+  selectedValue,
   searchTerm,
   searchResultTimestamp,
   onSearch,
 }) => {
-  const [loading, setLoading] = React.useState(false)
-  const performSearch = (searchTerm) => {
-    setLoading(true)
-    onSearch(searchTerm)
-  }
-  React.useEffect(() => setLoading(false), [searchResultTimestamp])
+  const performSearch = debounce((searchTerm) => {
+    onSearch(searchTerm.toLowerCase())
+  }, 300)
+  const [localSearchTerm, setLocalSearchTerm] = React.useState(searchTerm ?? '')
+  React.useEffect(() => {
+    selectedValue && setLocalSearchTerm(selectedValue)
+  }, [selectedValue])
   return (
     <>
       <div className="relative">
@@ -25,13 +26,18 @@ const SearchInput = ({
             aria-hidden="true"
             strokeWidth={1.5}
             stroke="currentColor"
-            className={classNames('w-4 h-4', { 'animate-spin': loading })}
+            className={classNames('w-5 h-5', {
+              'bg-green-200': selectedValue,
+              'text-green-800': selectedValue,
+              'border-green-800': selectedValue,
+              'rounded-lg': selectedValue,
+            })}
           >
-            {loading ? (
+            {selectedValue ? (
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"
+                d="M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-1.043 3.296 3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 0112 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 01-3.296-1.043 3.745 3.745 0 01-1.043-3.296A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 011.043-3.296 3.746 3.746 0 013.296-1.043A3.746 3.746 0 0112 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 013.296 1.043 3.746 3.746 0 011.043 3.296A3.745 3.745 0 0121 12z"
               />
             ) : (
               <path
@@ -44,10 +50,14 @@ const SearchInput = ({
         </div>
         <input
           type="text"
-          defaultValue={searchTerm}
+          value={localSearchTerm}
           name={name}
-          onChange={debounce((event) => performSearch(event.target.value), 300)}
-          className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 pl-8"
+          autoComplete="off"
+          onInput={(e) => {
+            setLocalSearchTerm(e.target.value)
+            performSearch(e.target.value)
+          }}
+          className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 pl-9"
         />
       </div>
     </>
@@ -62,37 +72,11 @@ const SearchResult = ({ resultItems, itemRenderer, onSelect }) => {
           <div
             key={item.index}
             onClick={() => onSelect(item)}
-            className="px-2 py-0.5 cursor-pointer bg-gray-50 hover:bg-blue-600 hover:text-white"
+            className="px-2 py-0.5 cursor-pointer bg-gray-50 hover:bg-blue-600 hover:text-white border-b border-b-solid border-b-gray-300 last:border-b-none"
           >
             {itemRenderer(item)}
           </div>
         ))}
-      </div>
-    </div>
-  )
-}
-
-const SelectedItem = ({ item, onSearch }) => {
-  return (
-    <div className="relative cursor-pointer" onClick={() => onSearch('')}>
-      <div className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 pr-8">
-        <div className="overflow-hidden">{item}</div>
-        <div className="absolute inset-y-0 right-0 flex items-center pr-3 ">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke-width="1.5"
-            stroke="currentColor"
-            className="w-4 h-4"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              d="M6 18L18 6M6 6l12 12"
-            />
-          </svg>
-        </div>
       </div>
     </div>
   )
@@ -108,23 +92,20 @@ const SearchSelect = ({
   itemRenderer,
   className,
   onSelect,
-  selectedItem,
+  selectedValue,
 }) => {
   return (
     <div className={className}>
       <label htmlFor={name} className="block mb-1 text-sm font-medium">
         {label}
       </label>
-      {(selectedItem && (
-        <SelectedItem item={itemRenderer(selectedItem)} onSearch={onSearch} />
-      )) || (
-        <SearchInput
-          name={name}
-          onSearch={onSearch}
-          searchResultTimestamp={searchResultTimestamp}
-          searchTerm={searchTerm}
-        />
-      )}
+      <SearchInput
+        name={name}
+        onSearch={onSearch}
+        searchResultTimestamp={searchResultTimestamp}
+        searchTerm={searchTerm}
+        selectedValue={selectedValue}
+      />
       {resultItems.length > 0 && (
         <SearchResult
           resultItems={resultItems}
