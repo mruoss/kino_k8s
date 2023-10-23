@@ -66,7 +66,7 @@ defmodule KinoK8s.ResourceCache do
             resource <- resources,
             not String.contains?(resource["name"], "/") do
           %{
-            index: "#{String.replace(api_version, "/", "")}#{resource["singularName"]}",
+            index: "#{String.replace(api_version, "/", "")}#{resource["name"]}",
             api_version: api_version,
             name: resource["name"],
             kind: resource["kind"],

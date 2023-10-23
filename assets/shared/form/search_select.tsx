@@ -106,7 +106,7 @@ const SearchSelect = ({
         searchTerm={searchTerm}
         selectedValue={selectedValue}
       />
-      {resultItems.length > 0 && (
+      {resultItems && (
         <SearchResult
           resultItems={resultItems}
           itemRenderer={itemRenderer}
