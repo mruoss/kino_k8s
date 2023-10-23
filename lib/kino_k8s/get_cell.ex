@@ -1,5 +1,5 @@
 defmodule KinoK8s.GETCell do
-  alias KinoK8s.ResourceCache
+  alias KinoK8s.ResourceGVKCache
   use Kino.JS, assets_path: "lib/assets/get_cell"
   use Kino.JS.Live
   use Kino.SmartCell, name: "GET Resource"
@@ -37,22 +37,26 @@ defmodule KinoK8s.GETCell do
   @impl true
   def handle_event("update_search_term", search_term, ctx) do
     case perform_search(search_term) do
-      [resource] ->
-        handle_event("update_resource", resource, ctx)
+      [gvk] ->
+        handle_event("update_gvk", gvk, ctx)
 
       search_result_items ->
-        send_event(ctx, ctx.origin, "update", %{search_result_items: search_result_items, resource: nil})
+        send_event(ctx, ctx.origin, "update", %{
+          search_result_items: search_result_items,
+          gvk: nil
+        })
 
         {:noreply, ctx}
     end
   end
 
-  def handle_event("update_resource", resource, ctx) do
+  def handle_event("update_gvk", gvk, ctx) do
     send_event(ctx, ctx.origin, "update", %{search_result_items: []})
+
     {
       :noreply,
       ctx
-      |> assign(resource: resource)
+      |> assign(gvk: gvk)
       |> broadcast_update()
     }
   end
@@ -91,8 +95,36 @@ defmodule KinoK8s.GETCell do
     else
       search_terms = String.split(search_term, ~r/\W/)
 
-      ResourceCache.get_resources()
+      ResourceGVKCache.get_gvks()
       |> Enum.filter(fn res -> Enum.all?(search_terms, &String.contains?(res.index, &1)) end)
     end
   end
+
+  # defp set_namespaces(ctx, nil), do: assign(ctx, namespaces: [], namespace: nil) |> set_pods(nil)
+
+  # defp set_namespaces(ctx, conn) do
+  #   with {:ok, namespaces} <- K8sHelpers.namespaces(conn) do
+  #     namespace = List.first(namespaces)
+
+  #     ctx
+  #     |> assign(namespaces: namespaces, namespace: namespace)
+  #     |> set_pods(namespace)
+  #   else
+  #     _ -> ctx
+  #   end
+  # end
+
+  # defp set_pods(ctx, nil), do: assign(ctx, pods: [], pod: nil)
+
+  # defp set_pods(ctx, namespace) do
+  #   with {:ok, pods} <- K8sHelpers.pods(ctx.assigns.conn, namespace) do
+  #     pod = List.first(pods)
+
+  #     ctx
+  #     |> assign(pods: pods, pod: pod)
+
+  #   else
+  #     _ -> ctx
+  #   end
+  # end
 end

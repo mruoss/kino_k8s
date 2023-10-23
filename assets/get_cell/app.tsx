@@ -3,7 +3,7 @@ import { KinoContext } from '../kino'
 import { useAttrsState } from '../shared/app'
 import Select from '../shared/form/select'
 import SearchSelect from '../shared/form/search_select'
-import { ResourceOption } from './resource'
+import GVKOption from './gvk_option'
 
 interface AppProps {
   initialAttrs: GETCellAttrs
@@ -26,17 +26,15 @@ const App = ({ initialAttrs, ctx }: AppProps) => {
       <div>
         <SearchSelect
           className="max-w-full pl-3 w-80"
-          name="resource"
-          label="Resource"
+          name="gvk"
+          label="Resource Kind"
           onSearch={updateAttr('search_term')}
           searchTerm={attrs['search_term']}
           searchResultTimestamp={attrs['search_result_timestamp']}
           resultItems={attrs['search_result_items']}
-          onSelect={updateAttr('resource')}
-          itemRenderer={(item) => (
-            <ResourceOption key={item.index} resource={item} />
-          )}
-          selectedValue={attrs['resource']?.kind}
+          onSelect={updateAttr('gvk')}
+          itemRenderer={(item) => <GVKOption key={item.index} gvk={item} />}
+          selectedValue={attrs['gvk']?.kind}
         />
       </div>
     </>
