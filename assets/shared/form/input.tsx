@@ -3,7 +3,7 @@ const Input = ({ name, label, onChange, defaultValue }) => {
     <div className="flex flex-row items-baseline">
       <label
         htmlFor={name}
-        className="block mb-1 text-sm font-medium uppercase pr-1"
+        className="mb-1 block pr-1 text-sm font-medium uppercase"
       >
         {label}
       </label>
@@ -12,7 +12,7 @@ const Input = ({ name, label, onChange, defaultValue }) => {
         defaultValue={defaultValue}
         name={name}
         onChange={(e) => onChange(e.target.value)}
-        className=" bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-1.5"
+        className=" block rounded-lg border border-gray-300 bg-gray-50 p-1.5 text-sm focus:border-blue-500 focus:ring-blue-500"
       />
     </div>
   )

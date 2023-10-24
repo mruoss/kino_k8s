@@ -18,7 +18,7 @@ const SearchInput = ({
   return (
     <>
       <div className="relative">
-        <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+        <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
@@ -26,7 +26,7 @@ const SearchInput = ({
             aria-hidden="true"
             strokeWidth={1.5}
             stroke="currentColor"
-            className={classNames('w-5 h-5', {
+            className={classNames('h-5 w-5', {
               'bg-green-200': selectedValue,
               'text-green-800': selectedValue,
               'border-green-800': selectedValue,
@@ -57,7 +57,7 @@ const SearchInput = ({
             setLocalSearchTerm(e.target.value)
             performSearch(e.target.value)
           }}
-          className="bg-gray-50 border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 pl-9"
+          className="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2 pl-9 text-sm focus:border-blue-500 focus:ring-blue-500"
         />
       </div>
     </>
@@ -72,7 +72,7 @@ const SearchResult = ({ resultItems, itemRenderer, onSelect }) => {
           <div
             key={item.index}
             onClick={() => onSelect(item)}
-            className="px-2 py-0.5 cursor-pointer bg-gray-50 hover:bg-blue-600 hover:text-white border-b border-b-solid border-b-gray-300 last:border-b-none"
+            className="border-b-solid last:border-b-none cursor-pointer border-b border-b-gray-300 bg-gray-50 px-2 py-0.5 hover:bg-blue-600 hover:text-white"
           >
             {itemRenderer(item)}
           </div>
@@ -96,7 +96,7 @@ const SearchSelect = ({
 }) => {
   return (
     <div className={className}>
-      <label htmlFor={name} className="block mb-1 text-sm font-medium">
+      <label htmlFor={name} className="mb-1 block text-sm font-medium">
         {label}
       </label>
       <SearchInput

@@ -14,8 +14,8 @@ interface AppProps {
 const App = ({ initialAttrs, ctx }: AppProps) => {
   const [attrs, updateAttr] = useAttrsState<GETCellAttrs>(ctx, initialAttrs)
   return (
-    <div className="rounded-md  border-gray-300 border border-solid font-inter font-medium text-gray-600">
-      <div className="p-3 bg-blue-100 border-b border-b-solid border-b-gray-300">
+    <div className="font-inter rounded-md border border-solid border-gray-300 font-medium text-gray-600">
+      <div className="border-b-solid border-b border-b-gray-300 bg-blue-100 p-3">
         <Input
           label="Assign To"
           name="assign_to"
@@ -23,7 +23,7 @@ const App = ({ initialAttrs, ctx }: AppProps) => {
           onChange={updateAttr('result_variable')}
         />
       </div>
-      <div className="p-3 flex space-x-4">
+      <div className="flex space-x-4 p-3">
         <SearchSelect
           className="max-w-full"
           name="gvk"

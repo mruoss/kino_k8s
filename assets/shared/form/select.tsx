@@ -9,14 +9,14 @@ const Select = ({
   className,
 }) => (
   <div className={className}>
-    <label htmlFor={name} className="block mb-1 text-sm font-medium">
+    <label htmlFor={name} className="mb-1 block text-sm font-medium">
       {label}
     </label>
     <select
       id={name}
       defaultValue={selectedOption}
       onChange={(e) => onChange(e!.target!.value)}
-      className="bg-gray-50 bg-caret-down bg-no-repeat bg-[center_right_10px] bg-[length:10px] border border-gray-300 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 pr-5 appearance-none"
+      className="bg-caret-down block w-full appearance-none rounded-lg border border-gray-300 bg-gray-50 bg-[length:10px] bg-[center_right_10px] bg-no-repeat p-2 pr-5 text-sm focus:border-blue-500 focus:ring-blue-500"
     >
       {options.map((option) => (
         <option key={option.value} value={option.value}>
