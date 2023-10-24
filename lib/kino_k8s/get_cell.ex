@@ -8,7 +8,7 @@ defmodule KinoK8s.GETCell do
 
   @impl true
   def init(attrs, ctx) do
-    kubeconfig = System.get_env("KUBECONFIG")
+    kubeconfig = Map.get(attrs, "kubeconfig", System.get_env("KUBECONFIG"))
     ctx = assign(ctx, mix_env: Mix.env())
 
     cond do
@@ -27,7 +27,19 @@ defmodule KinoK8s.GETCell do
          )}
 
       :otherwise ->
-        {:ok, assign(ctx, kubeconfig: kubeconfig, method: :GET)}
+        ctx =
+          assign(ctx,
+            gvk: attrs["gvk"],
+            namespaces: attrs["namespaces"],
+            namespace: attrs["namespace"],
+            resources: attrs["resources"],
+            resource: attrs["resource"],
+            kubeconfig: kubeconfig,
+            result_variable:
+              Kino.SmartCell.prefixed_var_name("k8s_resource", attrs["result_variable"])
+          )
+
+        {:ok, ctx}
     end
   end
 
@@ -37,8 +49,15 @@ defmodule KinoK8s.GETCell do
   end
 
   @impl true
-  def handle_event("update_method", method, ctx) do
-    {:noreply, assign(ctx, method: String.to_existing_atom(method))}
+  def handle_event("update_result_variable", variable, ctx) do
+    ctx =
+      if Kino.SmartCell.valid_variable_name?(variable) do
+        assign(ctx, result_variable: variable)
+      else
+        ctx
+      end
+
+    {:noreply, broadcast_update(ctx)}
   end
 
   def handle_event("update_search_term", search_term, ctx) do
@@ -103,19 +122,29 @@ defmodule KinoK8s.GETCell do
   end
 
   @impl true
-  def to_source(%{method: :GET, gvk: gvk, resource: resource, namespace: namespace} = attrs) do
-    kubeconfig = attrs.kubeconfig
-    %{"api_version" => api_version, "name" => gvk_name} = gvk
+  def to_source(attrs)
+      when not (is_nil(attrs.gvk) or is_nil(attrs.resource) or is_nil(attrs.namespace)) do
+    %{
+      kubeconfig: kubeconfig,
+      result_variable: result_variable,
+      namespace: namespace,
+      resource: resource
+    } = attrs
+
+    %{"api_version" => api_version, "name" => gvk_name} = attrs.gvk
 
     quote do
       {:ok, conn} = K8s.Conn.from_file(unquote(kubeconfig), insecure_skip_tls_verify: true)
 
-      {:ok, resource} = K8s.Client.get(unquote(api_version), unquote(gvk_name),
-        namespace: unquote(namespace),
-        name: unquote(resource)
-      )
-      |> K8s.Client.put_conn(conn)
-      |> K8s.Client.run()
+      {:ok, unquote(quoted_var(result_variable))} =
+        K8s.Client.get(unquote(api_version), unquote(gvk_name),
+          namespace: unquote(namespace),
+          name: unquote(resource)
+        )
+        |> K8s.Client.put_conn(conn)
+        |> K8s.Client.run()
+
+      unquote(quoted_var(result_variable)) |> Ymlr.document!() |> IO.puts()
     end
     |> Kino.SmartCell.quoted_to_string()
   end
@@ -162,4 +191,7 @@ defmodule KinoK8s.GETCell do
       _ -> ctx
     end
   end
+
+  defp quoted_var(nil), do: nil
+  defp quoted_var(string), do: {String.to_atom(string), [], nil}
 end

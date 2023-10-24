@@ -1,4 +1,3 @@
-import { AppContainer } from '../shared/app'
 import { KinoContext } from '../kino'
 import { GETCellAttrs } from './types'
 import Error from '../shared/error'
@@ -41,9 +40,5 @@ export const init = async (
     return root.render(<Error message={attrs.error} />)
   }
 
-  root.render(
-    <AppContainer>
-      <App initialAttrs={attrs} ctx={ctx} />
-    </AppContainer>,
-  )
+  root.render(<App initialAttrs={attrs} ctx={ctx} />)
 }

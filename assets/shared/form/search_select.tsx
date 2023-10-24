@@ -66,7 +66,7 @@ const SearchInput = ({
 
 const SearchResult = ({ resultItems, itemRenderer, onSelect }) => {
   return (
-    <div className="max-h-36 overflow-auto rounded-b-lg">
+    <div className="max-h-36 overflow-auto rounded-b-lg border-b border-l border-r border-gray-300">
       <div className="w-max min-w-full">
         {resultItems.map((item) => (
           <div
@@ -106,7 +106,7 @@ const SearchSelect = ({
         searchTerm={searchTerm}
         selectedValue={selectedValue}
       />
-      {resultItems && (
+      {(resultItems && resultItems.length) > 0 && (
         <SearchResult
           resultItems={resultItems}
           itemRenderer={itemRenderer}
