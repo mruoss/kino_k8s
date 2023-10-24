@@ -1,5 +1,14 @@
-const Select = ({ name, label, options, selectedOption, onChange }) => (
-  <>
+import classNames from 'classnames'
+
+const Select = ({
+  name,
+  label,
+  options,
+  selectedOption,
+  onChange,
+  className,
+}) => (
+  <div className={className}>
     <label htmlFor={name} className="block mb-1 text-sm font-medium">
       {label}
     </label>
@@ -15,7 +24,7 @@ const Select = ({ name, label, options, selectedOption, onChange }) => (
         </option>
       ))}
     </select>
-  </>
+  </div>
 )
 
 export default Select

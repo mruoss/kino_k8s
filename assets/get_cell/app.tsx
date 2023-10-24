@@ -13,31 +13,51 @@ interface AppProps {
 const App = ({ initialAttrs, ctx }: AppProps) => {
   const [attrs, updateAttr] = useAttrsState<GETCellAttrs>(ctx, initialAttrs)
   return (
-    <>
-      <div>
+    <div class="flex space-x-4">
+      <Select
+        name="method"
+        label="Method"
+        options={[{ label: 'GET', value: 'GET' }]}
+        selectedOption="get"
+        onChange={updateAttr('method')}
+      />
+      <SearchSelect
+        className="max-w-full"
+        name="gvk"
+        label="Resource Kind"
+        onSearch={updateAttr('search_term')}
+        searchTerm={attrs['search_term']}
+        searchResultTimestamp={attrs['search_result_timestamp']}
+        resultItems={attrs['search_result_items']}
+        onSelect={updateAttr('gvk')}
+        itemRenderer={(item) => <GVKOption gvk={item} />}
+        selectedValue={attrs['gvk']?.kind}
+      />
+      {attrs['namespaces'] && (
         <Select
-          name="type"
-          label="Type"
-          options={[{ label: 'GET', value: 'get' }]}
-          selectedOption="get"
-          onChange={(value) => console.log(value)}
+          name="namespace"
+          label="Namespace"
+          options={attrs.namespaces.map((ns) => ({
+            label: ns,
+            value: ns,
+          }))}
+          selectedOption={attrs['namespace']}
+          onChange={updateAttr('namespace')}
         />
-      </div>
-      <div>
-        <SearchSelect
-          className="max-w-full pl-3 w-80"
-          name="gvk"
-          label="Resource Kind"
-          onSearch={updateAttr('search_term')}
-          searchTerm={attrs['search_term']}
-          searchResultTimestamp={attrs['search_result_timestamp']}
-          resultItems={attrs['search_result_items']}
-          onSelect={updateAttr('gvk')}
-          itemRenderer={(item) => <GVKOption key={item.index} gvk={item} />}
-          selectedValue={attrs['gvk']?.kind}
+      )}
+      {attrs['resources'] && (
+        <Select
+          name="resource"
+          label="Resource Name"
+          options={attrs.resources.map((ns) => ({
+            label: ns,
+            value: ns,
+          }))}
+          selectedOption={attrs['resource']}
+          onChange={updateAttr('resource')}
         />
-      </div>
-    </>
+      )}
+    </div>
   )
 }
 

@@ -4,10 +4,10 @@ defmodule KinoK8s.Application do
   use Application
 
   @impl true
-  def start(_type, _args) do
+  def start(_type, [env]) do
     Kino.SmartCell.register(KinoK8s.GETCell)
 
-    Supervisor.start_link([KinoK8s.ResourceGVKCache],
+    Supervisor.start_link(if(env == :test, do: [], else: [KinoK8s.ResourceGVKCache]),
       strategy: :one_for_one,
       name: KinoK8s.Supervisor
     )

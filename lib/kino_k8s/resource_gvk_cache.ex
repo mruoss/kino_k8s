@@ -66,11 +66,11 @@ defmodule KinoK8s.ResourceGVKCache do
             gvk <- gvks,
             not String.contains?(gvk["name"], "/") do
           %{
-            index: "#{String.replace(api_version, "/", "")}#{gvk["name"]}",
-            api_version: api_version,
-            name: gvk["name"],
-            kind: gvk["kind"],
-            namespaced: gvk["namespaced"],
+            "index" => "#{String.replace(api_version, "/", "")}#{gvk["name"]}",
+            "api_version" => api_version,
+            "name" => gvk["name"],
+            "kind" => gvk["kind"],
+            "namespaced" => gvk["namespaced"]
           }
         end
 

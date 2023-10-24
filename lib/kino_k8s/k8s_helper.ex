@@ -8,9 +8,9 @@ defmodule KinoK8s.K8sHelper do
     end
   end
 
-  def pods(conn, namespace) do
+  def resources(conn, api_version, kind, namespace) do
     with {:ok, pod_list} <-
-           K8s.Client.list("v1", "pod", namespace: namespace)
+           K8s.Client.list(api_version, kind, namespace: namespace)
            |> K8s.Client.put_conn(conn)
            |> K8s.Client.run() do
       {:ok, get_in(pod_list, ["items", Access.all(), "metadata", "name"])}
