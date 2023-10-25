@@ -1,14 +1,14 @@
-import { GETCellAttrs } from './types'
 import { KinoContext } from '../kino'
 import useAttrsState from '../shared/attr_state'
-import Select from '../shared/form/select'
-import SearchSelect from '../shared/form/search_select'
 import Input from '../shared/form/input'
+import SearchSelect from '../shared/form/search_select'
+import Select from '../shared/form/select'
 import GVKOption from './gvk_option'
+import { GETCellAttrs, GVK } from './types'
 
 interface AppProps {
   initialAttrs: GETCellAttrs
-  ctx: KinoContext<GETCellAttrs>
+  ctx: KinoContext
 }
 
 const App = ({ initialAttrs, ctx }: AppProps) => {
@@ -24,16 +24,16 @@ const App = ({ initialAttrs, ctx }: AppProps) => {
         />
       </div>
       <div className="flex space-x-4 p-3">
-        <SearchSelect
+        <SearchSelect<GVK>
           className="max-w-full"
           name="gvk"
           label="Resource Kind"
           onSearch={updateAttr('search_term')}
           searchTerm={attrs['search_term']}
-          searchResultTimestamp={attrs['search_result_timestamp']}
+          resultItemsKeyField={'index'}
           resultItems={attrs['search_result_items']}
           onSelect={updateAttr('gvk')}
-          itemRenderer={(item) => <GVKOption gvk={item} />}
+          itemRenderer={(item: GVK) => <GVKOption gvk={item} />}
           selectedValue={attrs['gvk']?.kind}
         />
         {attrs['namespaces'] && (

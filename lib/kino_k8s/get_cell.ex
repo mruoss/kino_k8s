@@ -123,7 +123,7 @@ defmodule KinoK8s.GETCell do
 
   @impl true
   def to_source(attrs)
-      when not (is_nil(attrs.gvk) or is_nil(attrs.resource) or is_nil(attrs.namespace)) do
+      when not (is_nil(attrs.gvk) or is_nil(attrs.resource)) do
     %{
       kubeconfig: kubeconfig,
       result_variable: result_variable,
@@ -133,14 +133,14 @@ defmodule KinoK8s.GETCell do
 
     %{"api_version" => api_version, "name" => gvk_name} = attrs.gvk
 
+    path_params =
+      if is_nil(namespace), do: [name: resource], else: [name: resource, namespace: namespace]
+
     quote do
       {:ok, conn} = K8s.Conn.from_file(unquote(kubeconfig), insecure_skip_tls_verify: true)
 
       {:ok, unquote(quoted_var(result_variable))} =
-        K8s.Client.get(unquote(api_version), unquote(gvk_name),
-          namespace: unquote(namespace),
-          name: unquote(resource)
-        )
+        K8s.Client.get(unquote(api_version), unquote(gvk_name), unquote(path_params))
         |> K8s.Client.put_conn(conn)
         |> K8s.Client.run()
 
@@ -164,7 +164,11 @@ defmodule KinoK8s.GETCell do
     end
   end
 
-  defp set_namespaces(ctx, %{"namespaced" => false}), do: set_resources(ctx, nil)
+  defp set_namespaces(ctx, %{"namespaced" => false}) do
+    ctx
+    |> assign(namespaces: nil, namespace: nil)
+    |> set_resources(nil)
+  end
 
   defp set_namespaces(ctx, _gvk) do
     with {:ok, namespaces} <- K8sHelper.namespaces(conn(ctx)) do

@@ -1,12 +1,19 @@
-import classNames from 'classnames'
+type SelectProps = {
+  name: string
+  label: string
+  options: { value: string; label: string }[]
+  selectedOption: string
+  onChange: (option: string) => void
+  className?: string
+}
 
-const Select = ({
+const Select: React.FC<SelectProps> = ({
   name,
   label,
   options,
   selectedOption,
   onChange,
-  className,
+  className = '',
 }) => (
   <div className={className}>
     <label htmlFor={name} className="mb-1 block text-sm font-medium">

@@ -1,13 +1,20 @@
 import classNames from 'classnames'
-import debounce from 'debounce'
+import { ChangeEvent } from 'react'
+import { debounce } from '../utils'
 
-const SearchInput = ({
+type SearchInputProps = {
+  name: string
+  selectedValue: string
+  searchTerm: string
+  onSearch: (searchTerm: string) => void
+}
+
+const SearchInput: React.FC<SearchInputProps> = ({
   name,
   selectedValue,
   searchTerm,
-  searchResultTimestamp,
   onSearch,
-}) => {
+}: SearchInputProps) => {
   const performSearch = debounce((searchTerm) => {
     onSearch(searchTerm.toLowerCase())
   }, 300)
@@ -53,7 +60,7 @@ const SearchInput = ({
           value={localSearchTerm}
           name={name}
           autoComplete="off"
-          onInput={(e) => {
+          onInput={(e: ChangeEvent<HTMLInputElement>) => {
             setLocalSearchTerm(e.target.value)
             performSearch(e.target.value)
           }}
@@ -64,13 +71,25 @@ const SearchInput = ({
   )
 }
 
-const SearchResult = ({ resultItems, itemRenderer, onSelect }) => {
+type SearchResultProps<ItemType> = {
+  resultItems: [ItemType]
+  itemRenderer: (item: ItemType) => React.JSX.Element
+  onSelect: (item: ItemType) => void
+  resultItemsKeyField: keyof ItemType
+}
+
+const SearchResult = <ItemType,>({
+  resultItems,
+  itemRenderer,
+  onSelect,
+  resultItemsKeyField,
+}: SearchResultProps<ItemType>) => {
   return (
     <div className="max-h-36 overflow-auto rounded-b-lg border-b border-l border-r border-gray-300">
       <div className="w-max min-w-full">
         {resultItems.map((item) => (
           <div
-            key={item.index}
+            key={item[resultItemsKeyField] as string}
             onClick={() => onSelect(item)}
             className="border-b-solid last:border-b-none cursor-pointer border-b border-b-gray-300 bg-gray-50 px-2 py-0.5 hover:bg-blue-600 hover:text-white"
           >
@@ -82,18 +101,20 @@ const SearchResult = ({ resultItems, itemRenderer, onSelect }) => {
   )
 }
 
-const SearchSelect = ({
+type SearchSelectProps = { label: string; className: string }
+
+const SearchSelect = <ItemType,>({
   name,
   label,
   searchTerm,
   onSearch,
-  searchResultTimestamp,
   resultItems,
+  resultItemsKeyField,
   itemRenderer,
   className,
   onSelect,
   selectedValue,
-}) => {
+}: SearchInputProps & SearchResultProps<ItemType> & SearchSelectProps) => {
   return (
     <div className={className}>
       <label htmlFor={name} className="mb-1 block text-sm font-medium">
@@ -102,7 +123,6 @@ const SearchSelect = ({
       <SearchInput
         name={name}
         onSearch={onSearch}
-        searchResultTimestamp={searchResultTimestamp}
         searchTerm={searchTerm}
         selectedValue={selectedValue}
       />
@@ -111,6 +131,7 @@ const SearchSelect = ({
           resultItems={resultItems}
           itemRenderer={itemRenderer}
           onSelect={onSelect}
+          resultItemsKeyField={resultItemsKeyField}
         />
       )}
     </div>

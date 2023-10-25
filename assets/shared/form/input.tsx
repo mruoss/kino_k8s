@@ -1,4 +1,15 @@
-const Input = ({ name, label, onChange, defaultValue }) => {
+type InputProps = {
+  name: string
+  label: string
+  defaultValue: string
+  onChange: (value: string) => void
+}
+const Input: React.FC<InputProps> = ({
+  name,
+  label,
+  defaultValue,
+  onChange,
+}) => {
   return (
     <div className="flex flex-row items-baseline">
       <label
