@@ -4,7 +4,7 @@ config :esbuild,
   version: "0.18.6",
   default: [
     args:
-      ~w(assets/get_cell/main.tsx --external:react --external:react-dom/client --entry-names=[dir]/[name] --outbase=assets --outdir=lib/assets --target=es2020 --format=esm --bundle --sourcemap=inline --watch)
+      ~w(assets/get_cell/main.tsx assets/connection_cell/main.tsx --external:react --external:react-dom/client --entry-names=[dir]/[name] --outbase=assets --outdir=lib/assets --target=es2020 --format=esm --bundle --sourcemap=inline --watch)
   ]
 
 config :tailwind,

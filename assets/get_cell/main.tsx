@@ -1,10 +1,10 @@
 import { KinoContext } from '../kino'
-import { GETCellAttrs } from './types'
 import Error from '../shared/error'
 import App from './app'
+import { GETCellAttrs } from './types'
 
 const loadReact = async (
-  ctx: KinoContext<GETCellAttrs>,
+  ctx: KinoContext,
   attrs: GETCellAttrs,
 ): Promise<void> => {
   if (attrs.mix_env == 'prod') {
@@ -21,12 +21,10 @@ const loadReact = async (
 }
 
 export const init = async (
-  ctx: KinoContext<GETCellAttrs>,
+  ctx: KinoContext,
   attrs: GETCellAttrs,
 ): Promise<void> => {
   await loadReact(ctx, attrs)
-  console.log('attrs', attrs)
-  console.log('ctx', ctx)
 
   ctx.root.innerHTML = 'loading...'
 

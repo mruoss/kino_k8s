@@ -30,5 +30,7 @@ mix esbuild default
 ### Build CSS
 
 ```
-npx tailwindcss -c assets/get_cell/tailwind.config.js -i assets/get_cell/main.css -o ./lib/assets/get_cell/main.css --watch
+npx tailwindcss --content './assets/{get_cell,shared}/**/*.{ts,tsx}'  -i assets/get_cell/main.css -o ./lib/assets/get_cell/main.css --watch
+npx tailwindcss --content './assets/{connection_cell,shared}/**/*.{ts,tsx}'  -i assets/connection_cell/main.css -o ./lib/assets/connection_cell/main.css --watch
+
 ```

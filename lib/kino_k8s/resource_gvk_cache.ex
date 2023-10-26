@@ -33,7 +33,7 @@ defmodule KinoK8s.ResourceGVKCache do
   The connection map is hashed and the hash is returned.
   """
   def init_cache(conn) do
-    GenServer.call(__MODULE__, {:add_conn, conn})
+    GenServer.cast(__MODULE__, {:add_conn, conn})
   end
 
   @doc """
@@ -68,13 +68,13 @@ defmodule KinoK8s.ResourceGVKCache do
     {:noreply, put_in(state, [conn_hash, :gvks], gvks)}
   end
 
-  @impl true
-  def handle_call({:add_conn, conn}, _from, state) do
+  def handle_cast({:add_conn, conn}, state) do
     conn_hash = hash(conn)
     send(self(), {:update, conn_hash})
-    {:reply, conn_hash, Map.put(state, conn_hash, %{conn: conn, gvks: [], waiting: []})}
+    {:noreply, Map.put(state, conn_hash, %{conn: conn, gvks: [], waiting: []})}
   end
 
+  @impl true
   def handle_call({:get_gvks, conn_hash}, from, %{gvks: []} = state) do
     new_state = update_in(state, [conn_hash, :waiting], fn waiting -> [from | waiting] end)
     {:noreply, new_state}

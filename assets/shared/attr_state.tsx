@@ -11,6 +11,7 @@ const useAttrsState = <AttrsType extends object>(
   const [attrs, setAttrs] = React.useState<AttrsType>(initialAttrs)
   const updateAttr: UpdateAttrFun<AttrsType> = (attrName) => (attrValue) => {
     setAttrs((attrs) => ({ ...attrs, [attrName]: attrValue }))
+    console.log('Pushing ${attrName} to server', attrValue)
     ctx.pushEvent(`update_${attrName}`, attrValue)
   }
 

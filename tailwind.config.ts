@@ -1,6 +1,5 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-  content: ['./assets/{get_cell,shared}/**/*.{ts,tsx}'],
   theme: {
     extend: {
       fontFamily: {

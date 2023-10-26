@@ -1,14 +1,13 @@
-export type GVK = {
+import { Attributes } from '../shared/types'
+
+export interface GVK {
   kind: string
   name: string
   api_version: string
   index: string
 }
 
-export type GETCellAttrs = {
-  error?: string
-  result_variable: string
-  mix_env: string
+export interface GETCellAttrs extends Attributes {
   search_term: string
   search_result_items: [GVK]
   gvk: GVK
