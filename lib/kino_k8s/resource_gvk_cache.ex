@@ -1,62 +1,94 @@
 defmodule KinoK8s.ResourceGVKCache do
+  @moduledoc """
+  This GenServer caches resources (Group-Version-Kind) in a cluster by
+  repeatedly polling the API for endpoints. The module handle cache multiple
+  clusters. To initialize the cache for a cluster, call `add_conn/1` and pass
+  the `%K8s.Conn{}` for the desired cluster.
+  """
+
   use GenServer
 
   require Logger
 
-  defstruct [:conn, gvks: [], waiting: []]
+  @type conn_hash :: binary()
+  @type conn_t :: %{
+          conn: K8s.Conn.t(),
+          gvks: [map],
+          waiting: [pid()]
+        }
+
+  @type t :: %{
+          conn_hash() => conn_t()
+        }
 
   # seconds
   @update_frequency 60
 
   def start_link(_) do
-    case System.get_env("KUBECONFIG") do
-      nil ->
-        Logger.warning("KUBECONFIG environment variable not found. Not starting Server.")
-        {:error, :no_kubeconfig}
-
-      kubeconfig ->
-        {:ok, conn} = K8s.Conn.from_file(kubeconfig, insecure_skip_tls_verify: true)
-        GenServer.start_link(__MODULE__, conn, name: __MODULE__)
-    end
+    GenServer.start_link(__MODULE__, nil, name: __MODULE__)
   end
 
-  def get_gvks() do
-    GenServer.call(__MODULE__, :get_gvks)
+  @doc """
+  Initializes the the cache for the cluster defined by the given `conn`.
+  The connection map is hashed and the hash is returned.
+  """
+  def init_cache(conn) do
+    GenServer.call(__MODULE__, {:add_conn, conn})
+  end
+
+  @doc """
+  Returns the connection for the given `conn_hash`.
+  """
+  def get_conn(conn_hash) do
+    GenServer.call(__MODULE__, {:get_conn, conn_hash})
+  end
+
+  @doc """
+  Returns the resources (GVK) for the given connection.
+  """
+  def get_gvks(conn_hash) do
+    GenServer.call(__MODULE__, {:get_gvks, conn_hash})
   end
 
   @impl true
-  def init(conn) do
-    send(self(), :update)
-    {:ok, %__MODULE__{conn: conn}}
+  def init(_args) do
+    {:ok, %{}}
   end
 
   @impl true
-  def handle_info(:update, state) do
-    get_gvks(state.conn, self())
+  def handle_info({:update, conn_hash}, state) do
+    load_gvks(get_in(state, [conn_hash, :conn]), conn_hash, self())
     Process.send_after(self(), :update, @update_frequency * 1000)
     {:noreply, state}
   end
 
-  def handle_info({:gvks, gvks}, %{waiting: []} = state) do
-    {:noreply, struct!(state, gvks: gvks)}
-  end
-
-  def handle_info({:gvks, gvks}, state) do
-    for pid <- state.waiting, do: GenServer.reply(pid, gvks)
-    {:noreply, struct!(state, gvks: gvks)}
+  @impl true
+  def handle_cast({:gvks, conn_hash, gvks}, state) do
+    for pid <- get_in(state, [conn_hash, :waiting]), do: GenServer.reply(pid, gvks)
+    {:noreply, put_in(state, [conn_hash, :gvks], gvks)}
   end
 
   @impl true
-  def handle_call(:get_gvks, from, %{gvks: []} = state) do
-    new_state = update_in(state.waiting, fn waiting -> [from | waiting] end)
+  def handle_call({:add_conn, conn}, _from, state) do
+    conn_hash = hash(conn)
+    send(self(), {:update, conn_hash})
+    {:reply, conn_hash, Map.put(state, conn_hash, %{conn: conn, gvks: [], waiting: []})}
+  end
+
+  def handle_call({:get_gvks, conn_hash}, from, %{gvks: []} = state) do
+    new_state = update_in(state, [conn_hash, :waiting], fn waiting -> [from | waiting] end)
     {:noreply, new_state}
   end
 
-  def handle_call(:get_gvks, _from, state) do
-    {:reply, state.gvks, state}
+  def handle_call({:get_gvks, conn_hash}, _from, state) do
+    {:reply, get_in(state, [conn_hash, :gvks]), state}
   end
 
-  defp get_gvks(conn, pid) do
+  def handle_call({:get_conn, conn_hash}, _from, state) do
+    {:reply, get_in(state, [conn_hash, :conn]), state}
+  end
+
+  defp load_gvks(conn, conn_hash, pid) do
     spawn_link(fn ->
       {:ok, api_versions} = K8s.Discovery.versions(conn)
 
@@ -74,7 +106,9 @@ defmodule KinoK8s.ResourceGVKCache do
           }
         end
 
-      send(pid, {:gvks, result})
+      GenServer.cast(pid, {:gvks, conn_hash, result})
     end)
   end
+
+  defp hash(conn), do: :erlang.phash2(conn)
 end

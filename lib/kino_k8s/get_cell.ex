@@ -27,6 +27,9 @@ defmodule KinoK8s.GETCell do
          )}
 
       :otherwise ->
+        {:ok, conn} = K8s.Conn.from_file(kubeconfig, insecure_skip_tls_verify: true)
+        conn_hash = ResourceGVKCache.init_cache(conn)
+
         ctx =
           assign(ctx,
             gvk: attrs["gvk"],
@@ -34,7 +37,7 @@ defmodule KinoK8s.GETCell do
             namespace: attrs["namespace"],
             resources: attrs["resources"],
             resource: attrs["resource"],
-            kubeconfig: kubeconfig,
+            conn_hash: conn_hash,
             result_variable:
               Kino.SmartCell.prefixed_var_name("k8s_resource", attrs["result_variable"])
           )
@@ -61,7 +64,7 @@ defmodule KinoK8s.GETCell do
   end
 
   def handle_event("update_search_term", search_term, ctx) do
-    case perform_search(search_term) do
+    case perform_search(search_term, ctx.assigns.conn_hash) do
       [gvk] ->
         handle_event("update_gvk", gvk, ctx)
 
@@ -102,11 +105,6 @@ defmodule KinoK8s.GETCell do
      |> broadcast_update()}
   end
 
-  defp conn(ctx) do
-    {:ok, conn} = K8s.Conn.from_file(ctx.assigns.kubeconfig, insecure_skip_tls_verify: true)
-    conn
-  end
-
   defp broadcast_update(ctx) do
     broadcast_event(ctx, "update", get_js_attrs(ctx))
     ctx
@@ -125,7 +123,7 @@ defmodule KinoK8s.GETCell do
   def to_source(attrs)
       when not (is_nil(attrs.gvk) or is_nil(attrs.resource)) do
     %{
-      kubeconfig: kubeconfig,
+      conn_hash: conn_hash,
       result_variable: result_variable,
       namespace: namespace,
       resource: resource
@@ -137,7 +135,7 @@ defmodule KinoK8s.GETCell do
       if is_nil(namespace), do: [name: resource], else: [name: resource, namespace: namespace]
 
     quote do
-      {:ok, conn} = K8s.Conn.from_file(unquote(kubeconfig), insecure_skip_tls_verify: true)
+      conn = KinoK8s.ResourceGVKCache.get_conn(unquote(conn_hash))
 
       {:ok, unquote(quoted_var(result_variable))} =
         K8s.Client.get(unquote(api_version), unquote(gvk_name), unquote(path_params))
@@ -153,13 +151,13 @@ defmodule KinoK8s.GETCell do
     Kino.SmartCell.quoted_to_string(nil)
   end
 
-  defp perform_search(search_term) do
+  defp perform_search(search_term, conn_hash) do
     if byte_size(search_term) < 3 do
       []
     else
       search_terms = String.split(search_term, ~r/\W/)
 
-      ResourceGVKCache.get_gvks()
+      ResourceGVKCache.get_gvks(conn_hash)
       |> Enum.filter(fn res -> Enum.all?(search_terms, &String.contains?(res["index"], &1)) end)
     end
   end
@@ -198,4 +196,9 @@ defmodule KinoK8s.GETCell do
 
   defp quoted_var(nil), do: nil
   defp quoted_var(string), do: {String.to_atom(string), [], nil}
+
+  defp conn(ctx) do
+    conn = ResourceGVKCache.get_conn(ctx.assigns.conn_hash)
+    conn
+  end
 end
