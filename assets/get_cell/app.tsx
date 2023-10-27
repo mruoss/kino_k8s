@@ -48,6 +48,7 @@ const App = ({ initialAttrs, ctx }: AppProps) => {
             onSelect={updateAttr('gvk')}
             itemRenderer={(item: GVK) => <GVKOption gvk={item} />}
             selectedValue={attrs['gvk']?.kind}
+            placeholder="apps/v1 Deployment"
           />
         )}
         {attrs['namespaces'] && (

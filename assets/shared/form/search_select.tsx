@@ -7,6 +7,7 @@ type SearchInputProps = {
   selectedValue: string
   searchTerm: string
   onSearch: (searchTerm: string) => void
+  placeholder?: string
 }
 
 const SearchInput: React.FC<SearchInputProps> = ({
@@ -14,6 +15,7 @@ const SearchInput: React.FC<SearchInputProps> = ({
   selectedValue,
   searchTerm,
   onSearch,
+  placeholder,
 }: SearchInputProps) => {
   const performSearch = debounce((searchTerm) => {
     onSearch(searchTerm.toLowerCase())
@@ -60,6 +62,7 @@ const SearchInput: React.FC<SearchInputProps> = ({
           value={localSearchTerm}
           name={name}
           autoComplete="off"
+          placeholder={placeholder}
           onInput={(e: ChangeEvent<HTMLInputElement>) => {
             setLocalSearchTerm(e.target.value)
             performSearch(e.target.value)
@@ -114,6 +117,7 @@ const SearchSelect = <ItemType,>({
   className,
   onSelect,
   selectedValue,
+  placeholder,
 }: SearchInputProps & SearchResultProps<ItemType> & SearchSelectProps) => {
   return (
     <div className={className}>
@@ -125,6 +129,7 @@ const SearchSelect = <ItemType,>({
         onSearch={onSearch}
         searchTerm={searchTerm}
         selectedValue={selectedValue}
+        placeholder={placeholder}
       />
       {(resultItems && resultItems.length) > 0 && (
         <SearchResult

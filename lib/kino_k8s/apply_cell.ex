@@ -106,7 +106,6 @@ defmodule KinoK8s.ApplyCell do
         unquote(quoted_var(result_variable)) |> Ymlr.document!() |> IO.puts()
       end
       |> Kino.SmartCell.quoted_to_string()
-      |> dbg
     else
       ""
     end
