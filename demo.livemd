@@ -18,7 +18,7 @@ Mix.install([
   )
 ```
 
-<!-- livebook:{"attrs":{"body":"kind: ConfigMap\napiVersion: v1\nmetadata:\n  name: kino-k8s-cm\n  namespace: default\ndata:\n  key: default\n","connection":{"conn_hash":37669473,"variable":"conn"},"connections":[{"conn_hash":37669473,"variable":"conn"}],"method":"update","methods":["apply","create","update"],"result_variable":"applied_resource"},"chunks":null,"kind":"Elixir.KinoK8s.ApplyCell","livebook_object":"smart_cell"} -->
+<!-- livebook:{"attrs":{"body":"kind: ConfigMap\napiVersion: v1\nmetadata:\n  name: kino-k8s-cm\n  namespace: default\ndata:\n  key: default\n","connection":{"conn_hash":37669473,"variable":"conn"},"connections":[{"conn_hash":37669473,"variable":"conn"}],"method":"apply","methods":["apply","create","update"],"result_variable":"applied_resource"},"chunks":null,"kind":"Elixir.KinoK8s.ApplyCell","livebook_object":"smart_cell"} -->
 
 ```elixir
 import YamlElixir.Sigil
@@ -33,7 +33,7 @@ import YamlElixir.Sigil
   data:
     key: default
   """
-  |> K8s.Client.update()
+  |> K8s.Client.apply()
   |> K8s.Client.put_conn(conn)
   |> K8s.Client.run()
 

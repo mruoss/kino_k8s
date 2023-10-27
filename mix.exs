@@ -25,7 +25,6 @@ defmodule KinoK8s.MixProject do
       {:k8s, "~> 2.0"},
       {:ymlr, "~> 4.0"},
       {:kino, "~> 0.11.0"},
-      {:esbuild, "~> 0.7.1", only: :dev}
     ]
   end
 end

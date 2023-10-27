@@ -21,17 +21,14 @@ be found at <https://hexdocs.pm/kino_k8s>.
 
 ## Development
 
-### Build Javascript
+### Build and Watch Javascript and CSS
 
 ```
-mix esbuild default
+npm start
 ```
 
-### Build CSS
+### Build for Production
 
 ```
-npx tailwindcss --content './assets/{get_cell,shared}/**/*.{ts,tsx}'  -i assets/get_cell/main.css -o ./lib/assets/get_cell/main.css --watch
-npx tailwindcss --content './assets/{connection_cell,shared}/**/*.{ts,tsx}'  -i assets/connection_cell/main.css -o ./lib/assets/connection_cell/main.css --watch
-npx tailwindcss --content './assets/{apply_cell,shared}/**/*.{ts,tsx}'  -i assets/apply_cell/main.css -o ./lib/assets/apply_cell/main.css --watch
-
+npm run build
 ```

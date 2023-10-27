@@ -1,11 +1,22 @@
 {
+  "scripts": {
+    "tailwind:build:connection_cell": "tailwindcss --content './assets/{connection_cell,shared}/**/*.{ts,tsx}'  -i assets/connection_cell/main.css -o ./lib/assets/connection_cell/main.css",
+    "tailwind:build:get_cell": "tailwindcss --content './assets/{get_cell,shared}/**/*.{ts,tsx}'  -i assets/get_cell/main.css -o ./lib/assets/get_cell/main.css",
+    "tailwind:build:apply_cell": "tailwindcss --content './assets/{apply_cell,shared}/**/*.{ts,tsx}'  -i assets/apply_cell/main.css -o ./lib/assets/apply_cell/main.css",
+    "tailwind": "npm-run-all --parallel tailwind:build:*",
+    "es:build": "esbuild assets/*/main.tsx --external:react --external:react-dom/client --entry-names=[dir]/[name] --outbase=assets --outdir=lib/assets --target=es2020 --format=esm --bundle",
+    "es:watch": "npm run es:build -- --sourcemap=inline --watch",
+    "start": "npm-run-all --parallel 'tailwind:build:* -- --watch' es:watch",
+    "build": "npm-run-all --parallel tailwind es:build"
+  },
   "devDependencies": {
     "@types/react": "^18.2.28",
     "@typescript-eslint/eslint-plugin": "^6.9.0",
     "@typescript-eslint/parser": "^6.9.0",
     "classnames": "^2.3.2",
-    "esbuild": "^0.19.0",
+    "esbuild": "^0.19.5",
     "eslint": "^8.52.0",
+    "npm-run-all": "^4.1.5",
     "prettier": "^3.0.3",
     "prettier-plugin-tailwindcss": "^0.5.6",
     "tailwindcss": "^3.3.3",
