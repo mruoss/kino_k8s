@@ -16,7 +16,7 @@ export const debounce = <T extends (...args: any[]) => ReturnType<T>>(
   }
 }
 
-export const loadReact = async <T>(
+export const loadReact = async (
   ctx: KinoContext,
   attrs: Attributes,
 ): Promise<void> => {
