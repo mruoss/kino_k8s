@@ -27,3 +27,5 @@ kino_k8s-*.tar
 
 # Node modules
 *node_modules/*
+
+*.livemd_files
