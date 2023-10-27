@@ -41,7 +41,7 @@ const Select = ({
     </label>
     <select
       id={name}
-      defaultValue={selectedOption}
+      value={selectedOption}
       onChange={(e) => onChange(e!.target!.value)}
       className={classNames(
         { 'block w-full': orientation == 'vert' },

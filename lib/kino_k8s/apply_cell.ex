@@ -40,6 +40,8 @@ defmodule KinoK8s.ApplyCell do
   end
 
   @impl true
+  @spec handle_info({:connections, list()}, Kino.JS.Live.Context.t()) ::
+          {:noreply, Kino.JS.Live.Context.t()}
   def handle_info({:connections, connections}, ctx) do
     connection = List.first(connections)
 
