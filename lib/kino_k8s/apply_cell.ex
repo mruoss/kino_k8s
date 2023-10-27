@@ -14,6 +14,9 @@ defmodule KinoK8s.ApplyCell do
   data:
     key: default
   """
+
+  @available_methods ["apply", "create", "update"]
+
   @impl true
   @spec init(nil | maybe_improper_list() | map(), Kino.JS.Live.Context.t()) ::
           {:ok, Kino.JS.Live.Context.t(), [{:editor, [...]}, ...]}
@@ -22,6 +25,8 @@ defmodule KinoK8s.ApplyCell do
       assign(ctx,
         connections: [],
         connection: attrs[:connection],
+        method: attrs[:method] || "apply",
+        methods: @available_methods,
         result_variable:
           Kino.SmartCell.prefixed_var_name("applied_resource", attrs["result_variable"])
       )
@@ -37,6 +42,7 @@ defmodule KinoK8s.ApplyCell do
   @impl true
   def handle_info({:connections, connections}, ctx) do
     connection = List.first(connections)
+
     {:noreply,
      ctx
      |> assign(connections: connections, connection: ctx.assigns.connection || connection)
@@ -49,7 +55,6 @@ defmodule KinoK8s.ApplyCell do
     {:noreply, ctx |> assign(connection: connection) |> broadcast_update}
   end
 
-  @impl true
   def handle_event("update_result_variable", variable, ctx) do
     ctx =
       if Kino.SmartCell.valid_variable_name?(variable) do
@@ -59,6 +64,10 @@ defmodule KinoK8s.ApplyCell do
       end
 
     {:noreply, broadcast_update(ctx)}
+  end
+
+  def handle_event("update_method", method, ctx) do
+    {:noreply, ctx |> assign(method: method) |> broadcast_update()}
   end
 
   @impl true
@@ -88,18 +97,27 @@ defmodule KinoK8s.ApplyCell do
 
   @impl true
   def to_source(attrs) do
-    if all_fields_filled?(attrs, [:connection, :result_variable, :body]) do
+    if all_fields_filled?(attrs, [:connection, :result_variable, :body, :method]) do
       %{
         connection: connection,
+        method: method,
         result_variable: result_variable,
-        body: body,
+        body: body
       } = attrs
+
+      method_expr =
+        case method do
+          "apply" -> quote do: K8s.Client.apply()
+          "create" -> quote do: K8s.Client.create()
+          "update" -> quote do: K8s.Client.update()
+        end
 
       quote do
         import YamlElixir.Sigil
+
         {:ok, unquote(quoted_var(result_variable))} =
           unquote(quoted_body(body))
-          |> K8s.Client.apply()
+          |> unquote(method_expr)
           |> K8s.Client.put_conn(unquote(quoted_var(connection.variable)))
           |> K8s.Client.run()
 
@@ -119,7 +137,6 @@ defmodule KinoK8s.ApplyCell do
   defp quoted_var(string), do: {String.to_atom(string), [], nil}
 
   defp quoted_body(body) do
-   {:sigil_y, [delimiter: "\"\"\""],
-    [{:<<>>, [indentation: 0], [body]}, []]}
+    {:sigil_y, [delimiter: "\"\"\""], [{:<<>>, [indentation: 0], [body]}, []]}
   end
 end

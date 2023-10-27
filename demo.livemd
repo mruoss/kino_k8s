@@ -11,7 +11,33 @@ Mix.install([
 <!-- livebook:{"attrs":{"mix_env":"dev","opts":{"context":"rancher-desktop","insecure_skip_tls_verify":true},"result_variable":"conn","running_on_k8s":false,"source":"~/.kube/config","source_type":"file"},"chunks":null,"kind":"Elixir.KinoK8s.ConnectionCell","livebook_object":"smart_cell"} -->
 
 ```elixir
-{:ok, conn} = K8s.Conn.from_file("~/.kube/config", insecure_skip_tls_verify: true)
+{:ok, conn} =
+  K8s.Conn.from_file("~/.kube/config",
+    context: "rancher-desktop",
+    insecure_skip_tls_verify: true
+  )
+```
+
+<!-- livebook:{"attrs":{"body":"kind: ConfigMap\napiVersion: v1\nmetadata:\n  name: kino-k8s-cm\n  namespace: default\ndata:\n  key: default\n","connection":{"conn_hash":37669473,"variable":"conn"},"connections":[{"conn_hash":37669473,"variable":"conn"}],"method":"update","methods":["apply","create","update"],"result_variable":"applied_resource"},"chunks":null,"kind":"Elixir.KinoK8s.ApplyCell","livebook_object":"smart_cell"} -->
+
+```elixir
+import YamlElixir.Sigil
+
+{:ok, applied_resource} =
+  ~y"""
+  kind: ConfigMap
+  apiVersion: v1
+  metadata:
+    name: kino-k8s-cm
+    namespace: default
+  data:
+    key: default
+  """
+  |> K8s.Client.update()
+  |> K8s.Client.put_conn(conn)
+  |> K8s.Client.run()
+
+applied_resource |> Ymlr.document!() |> IO.puts()
 ```
 
 <!-- livebook:{"attrs":{"connection":{"conn_hash":37669473,"variable":"conn"},"connections":[{"conn_hash":37669473,"variable":"conn"}],"gvk":{"api_version":"v1","index":"v1pods","kind":"Pod","name":"pods","namespaced":true},"mix_env":"dev","namespace":"kube-system","namespaces":["default","kube-system","kube-public","kube-node-lease","collab-api"],"resource":"svclb-traefik-d6dd8e93-fkqnz","resources":["svclb-traefik-d6dd8e93-fkqnz","traefik-66c46d954f-wqx7m","coredns-597584b69b-xxbkz","local-path-provisioner-79f67d76f8-b48ds","metrics-server-5f9f776df5-rvlgr"],"result_variable":"resource"},"chunks":null,"kind":"Elixir.KinoK8s.GETCell","livebook_object":"smart_cell"} -->
@@ -26,26 +52,4 @@ Mix.install([
   |> K8s.Client.run()
 
 resource |> Ymlr.document!() |> IO.puts()
-```
-
-<!-- livebook:{"attrs":{"body":"kind: ConfigMap\napiVersion: v1\nmetadata:\n  name: kino-k8s-cm\n  namespace: default\ndata:\n  key: default2\n","connection":{"conn_hash":37669473,"variable":"conn"},"connections":[{"conn_hash":37669473,"variable":"conn"}],"result_variable":"applied_resource"},"chunks":null,"kind":"Elixir.KinoK8s.ApplyCell","livebook_object":"smart_cell"} -->
-
-```elixir
-import YamlElixir.Sigil
-
-{:ok, applied_resource} =
-  ~y"""
-  kind: ConfigMap
-  apiVersion: v1
-  metadata:
-    name: kino-k8s-cm
-    namespace: default
-  data:
-    key: default2
-  """
-  |> K8s.Client.apply()
-  |> K8s.Client.put_conn(conn)
-  |> K8s.Client.run()
-
-applied_resource |> Ymlr.document!() |> IO.puts()
 ```

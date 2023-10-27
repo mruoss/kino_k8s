@@ -26,6 +26,17 @@ const App = ({ initialAttrs, ctx }: AppProps) => {
           onChange={updateAttr('connection')}
           orientation="horiz"
         />
+        <Select
+          name="method"
+          label="Method"
+          options={attrs.methods.map((method) => ({
+            label: method.toUpperCase(),
+            value: method,
+          }))}
+          selectedOption={attrs.method}
+          onChange={updateAttr('method')}
+          orientation="horiz"
+        />
         <Input
           label="Assign To"
           name="assign_to"

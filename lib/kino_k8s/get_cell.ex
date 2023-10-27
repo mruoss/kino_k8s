@@ -10,7 +10,7 @@ defmodule KinoK8s.GETCell do
   def init(attrs, ctx) do
     ctx =
       assign(ctx,
-      mix_env: Mix.env(),
+        mix_env: Mix.env(),
         connections: [],
         connection: attrs[:connection],
         gvk: attrs[:gvk],
@@ -18,9 +18,9 @@ defmodule KinoK8s.GETCell do
         namespace: attrs[:namespace],
         resources: attrs[:resources],
         resource: attrs[:resource],
-        result_variable:
-          Kino.SmartCell.prefixed_var_name("resource", attrs["result_variable"])
+        result_variable: Kino.SmartCell.prefixed_var_name("resource", attrs["result_variable"])
       )
+
     {:ok, ctx}
   end
 
@@ -34,7 +34,6 @@ defmodule KinoK8s.GETCell do
     connection = Enum.find(ctx.assigns.connections, &(&1.variable == variable))
     {:noreply, ctx |> assign(connection: connection) |> broadcast_update}
   end
-
 
   @impl true
   def handle_event("update_result_variable", variable, ctx) do
@@ -93,6 +92,7 @@ defmodule KinoK8s.GETCell do
   @impl true
   def handle_info({:connections, connections}, ctx) do
     connection = List.first(connections)
+
     {:noreply,
      ctx
      |> assign(connections: connections, connection: ctx.assigns.connection || connection)

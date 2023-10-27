@@ -13,11 +13,11 @@ defmodule KinoK8s.ConnectionCell do
   def init(attrs, ctx) do
     ctx =
       assign(ctx,
-        result_variable: Kino.SmartCell.prefixed_var_name("conn", attrs["result_variable"]),
-        source_type: attrs["source_type"] || @default_source_type,
-        source: attrs["source"] || @default_file,
+        result_variable: Kino.SmartCell.prefixed_var_name("conn", attrs[:result_variable]),
+        source_type: attrs[:source_type] || @default_source_type,
+        source: attrs[:source] || @default_file,
+        opts: attrs[:opts] || %{"insecure_skip_tls_verify" => true},
         running_on_k8s: File.exists?("/var/run/secrets/kubernetes.io/serviceaccount"),
-        opts: %{"insecure_skip_tls_verify" => true},
         mix_env: Mix.env()
       )
 
@@ -43,7 +43,7 @@ defmodule KinoK8s.ConnectionCell do
         |> Map.take(["context", "insecure_skip_tls_verify"])
         |> Enum.map(fn {key, value} -> {String.to_atom(key), value} end)
 
-        expr =
+      expr =
         case source_type do
           "file" -> quote do: K8s.Conn.from_file(unquote(source), unquote(opts))
           "env" -> quote do: K8s.Conn.from_env(unquote(source), unquote(opts))
