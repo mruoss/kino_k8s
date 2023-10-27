@@ -29,7 +29,7 @@ const App = ({ initialAttrs, ctx }: AppProps) => {
             label: connection.variable,
             value: connection.variable,
           }))}
-          selectedOption={attrs.connection?.variable}
+          selectedOption={attrs.connection?.variable?.toString()}
           onChange={updateAttr('connection')}
           orientation="horiz"
         />

@@ -60,10 +60,10 @@ const App = ({ initialAttrs, ctx }: AppProps) => {
           name="insecure_skip_tls_verify"
           label="Insecure Skip TLS Verify"
           options={[
-            { label: 'Yes', value: true },
-            { label: 'No', value: false },
+            { label: 'Yes', value: 'true' },
+            { label: 'No', value: 'false' },
           ]}
-          selectedOption={attrs.opts.insecure_skip_tls_verify}
+          selectedOption={attrs.opts.insecure_skip_tls_verify.toString()}
           onChange={(value) =>
             updateAttr('opts')({
               ...attrs.opts,

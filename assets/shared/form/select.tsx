@@ -1,16 +1,16 @@
 import classNames from 'classnames'
 
-type SelectProps<ValueType> = {
+type SelectProps = {
   name: string
   label: string
-  options: { value: ValueType; label: string }[]
-  selectedOption: ValueType
+  options: { value: string; label: string }[]
+  selectedOption?: string
   onChange: (option: string) => void
   className?: string
   orientation?: 'horiz' | 'vert'
 }
 
-const Select = <ValueType,>({
+const Select = ({
   name,
   label,
   options,
@@ -18,7 +18,7 @@ const Select = <ValueType,>({
   onChange,
   className = '',
   orientation = 'vert',
-}: SelectProps<ValueType>) => (
+}: SelectProps) => (
   <div
     className={classNames(
       {
