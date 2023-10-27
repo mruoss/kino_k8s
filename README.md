@@ -37,6 +37,5 @@ npm run build
 
 ```bash
 mix escript.install hex livebook
-MIX_ENV=dev livebook server
-# open the demo.livemd
+MIX_ENV=dev livebook server ./demo.livemd
 ```

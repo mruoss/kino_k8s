@@ -127,9 +127,7 @@ defmodule KinoK8s.ListCell do
 
   @impl true
   def to_source(attrs) do
-    dbg(attrs)
-
-    if all_fields_filled?(attrs, [:connection, :result_variable, :result_type, :gvk, :namespace]) do
+    if all_fields_filled?(attrs, [:connection, :result_variable, :result_type, :gvk]) do
       %{
         connection: connection,
         result_variable: result_variable,
@@ -142,6 +140,7 @@ defmodule KinoK8s.ListCell do
       path_params =
         case namespace do
           "__ALL__" -> [namespace: :all]
+          nil -> []
           other -> [namespace: other]
         end
 

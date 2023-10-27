@@ -125,33 +125,32 @@ defmodule KinoK8s.GETCell do
   end
 
   @impl true
-  def to_source(attrs)
-      when not (is_nil(attrs.gvk) or is_nil(attrs.resource)) do
-    %{
-      connection: connection,
-      result_variable: result_variable,
-      namespace: namespace,
-      resource: resource
-    } = attrs
+  def to_source(attrs) do
+    if all_fields_filled?(attrs, [:connection, :result_variable, :gvk, :resource]) do
+      %{
+        connection: connection,
+        result_variable: result_variable,
+        namespace: namespace,
+        resource: resource
+      } = attrs
 
-    %{"api_version" => api_version, "name" => gvk_name} = attrs.gvk
+      %{"api_version" => api_version, "name" => gvk_name} = attrs.gvk
 
-    path_params =
-      if is_nil(namespace), do: [name: resource], else: [name: resource, namespace: namespace]
+      path_params =
+        if is_nil(namespace), do: [name: resource], else: [name: resource, namespace: namespace]
 
-    quote do
-      {:ok, unquote(quoted_var(result_variable))} =
-        K8s.Client.get(unquote(api_version), unquote(gvk_name), unquote(path_params))
-        |> K8s.Client.put_conn(unquote(quoted_var(connection.variable)))
-        |> K8s.Client.run()
+      quote do
+        {:ok, unquote(quoted_var(result_variable))} =
+          K8s.Client.get(unquote(api_version), unquote(gvk_name), unquote(path_params))
+          |> K8s.Client.put_conn(unquote(quoted_var(connection.variable)))
+          |> K8s.Client.run()
 
-      unquote(quoted_var(result_variable)) |> Ymlr.document!() |> IO.puts()
+        unquote(quoted_var(result_variable)) |> Ymlr.document!() |> IO.puts()
+      end
+      |> Kino.SmartCell.quoted_to_string()
+    else
+      ""
     end
-    |> Kino.SmartCell.quoted_to_string()
-  end
-
-  def to_source(_attrs) do
-    Kino.SmartCell.quoted_to_string(nil)
   end
 
   defp perform_search(search_term, conn_hash) do
@@ -195,6 +194,10 @@ defmodule KinoK8s.GETCell do
     else
       _ -> ctx
     end
+  end
+
+  defp all_fields_filled?(attrs, keys) do
+    not Enum.any?(keys, fn key -> attrs[key] in [nil, ""] end)
   end
 
   defp quoted_var(nil), do: nil
