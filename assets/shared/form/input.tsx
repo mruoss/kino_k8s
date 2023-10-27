@@ -1,20 +1,34 @@
+import classNames from 'classnames'
+
 type InputProps = {
   name: string
   label: string
   defaultValue: string
   onChange: (value: string) => void
+  orientation?: 'horiz' | 'vert'
 }
 const Input: React.FC<InputProps> = ({
   name,
   label,
   defaultValue,
   onChange,
+  orientation = 'vert',
 }) => {
   return (
-    <div className="flex flex-row items-baseline">
+    <div
+      className={classNames({
+        'flex flex-row items-baseline': orientation == 'horiz',
+      })}
+    >
       <label
         htmlFor={name}
-        className="mb-1 block pr-1 text-sm font-medium uppercase"
+        className={classNames(
+          {
+            block: orientation == 'vert',
+            'pr-1 uppercase': orientation == 'horiz',
+          },
+          'mb-1 text-sm font-medium',
+        )}
       >
         {label}
       </label>
@@ -23,7 +37,10 @@ const Input: React.FC<InputProps> = ({
         value={defaultValue}
         name={name}
         onChange={(e) => onChange(e.target.value)}
-        className="block rounded-lg border border-gray-300 bg-gray-50 p-1.5 text-sm focus:border-blue-500 focus:ring-blue-500"
+        className={classNames(
+          { 'block w-full': orientation == 'vert' },
+          'rounded-lg border border-gray-300 bg-gray-50 p-1.5 text-sm focus:border-blue-500 focus:ring-blue-500',
+        )}
       />
     </div>
   )

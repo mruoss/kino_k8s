@@ -10,10 +10,7 @@ interface AppProps {
 }
 
 const App = ({ initialAttrs, ctx }: AppProps) => {
-  const [attrs, updateAttr] = useAttrsState<ConnectionCellAttrs>(
-    ctx,
-    initialAttrs,
-  )
+  const [attrs, updateAttr] = useAttrsState(ctx, initialAttrs)
   const source_type_options = [
     { label: 'File', value: 'file' },
     { label: 'Environment Variable', value: 'env' },
@@ -23,13 +20,7 @@ const App = ({ initialAttrs, ctx }: AppProps) => {
 
   return (
     <div className="rounded-md border border-solid border-gray-300 font-inter font-medium text-gray-600">
-      <div className="border-b-solid flex flex-wrap justify-between gap-y-3 border-b border-b-gray-300 bg-blue-100 p-3">
-        <Input
-          label="Assign To"
-          name="assign_to"
-          defaultValue={attrs['result_variable']}
-          onChange={updateAttr('result_variable')}
-        />
+      <div className="border-b-solid flex flex-wrap gap-x-5 gap-y-3 border-b border-b-gray-300 bg-blue-100 p-3">
         <Select
           name="source_type"
           label="Source Type"
@@ -38,12 +29,22 @@ const App = ({ initialAttrs, ctx }: AppProps) => {
           onChange={updateAttr('source_type')}
           orientation="horiz"
         />
+        <Input
+          label="Assign To"
+          name="assign_to"
+          defaultValue={attrs['result_variable']}
+          onChange={updateAttr('result_variable')}
+          orientation="horiz"
+        />
+      </div>
+      <div className="flex flex-wrap gap-x-5 p-3">
         {attrs['source_type'] != 'k8s' && (
           <Input
             label={attrs['source_type'] == 'file' ? 'File Path' : 'Env Var'}
             name="source"
             defaultValue={attrs['source']}
             onChange={updateAttr('source')}
+            orientation="vert"
           />
         )}
         {attrs['source_type'] != 'k8s' && (
@@ -70,7 +71,6 @@ const App = ({ initialAttrs, ctx }: AppProps) => {
               insecure_skip_tls_verify: JSON.parse(value),
             })
           }
-          orientation="horiz"
         />
       </div>
     </div>

@@ -8,40 +8,20 @@ defmodule KinoK8s.GETCell do
 
   @impl true
   def init(attrs, ctx) do
-    kubeconfig = Map.get(attrs, "kubeconfig", System.get_env("KUBECONFIG"))
-    ctx = assign(ctx, mix_env: Mix.env())
-
-    cond do
-      is_nil(kubeconfig) ->
-        {:ok,
-         assign(ctx,
-           error:
-             "KUBECONFIG is not defined. You have to define an ENV variable called KUBECONFIG pointing to the kube config file."
-         )}
-
-      not File.exists?(kubeconfig) ->
-        {:ok,
-         assign(ctx,
-           error:
-             "The file #{kubeconfig} defined by the KBUECONFIG ENV variable was not found on your system."
-         )}
-
-      :otherwise ->
-        ctx =
-          assign(ctx,
-            connections: [],
-            connection: attrs[:connection],
-            gvk: attrs[:gvk],
-            namespaces: attrs[:namespaces],
-            namespace: attrs[:namespace],
-            resources: attrs[:resources],
-            resource: attrs[:resource],
-            result_variable:
-              Kino.SmartCell.prefixed_var_name("k8s_resource", attrs["result_variable"])
-          )
-
-        {:ok, ctx}
-    end
+    ctx =
+      assign(ctx,
+      mix_env: Mix.env(),
+        connections: [],
+        connection: attrs[:connection],
+        gvk: attrs[:gvk],
+        namespaces: attrs[:namespaces],
+        namespace: attrs[:namespace],
+        resources: attrs[:resources],
+        resource: attrs[:resource],
+        result_variable:
+          Kino.SmartCell.prefixed_var_name("resource", attrs["result_variable"])
+      )
+    {:ok, ctx}
   end
 
   @impl true

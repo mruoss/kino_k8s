@@ -12,16 +12,10 @@ interface AppProps {
 }
 
 const App = ({ initialAttrs, ctx }: AppProps) => {
-  const [attrs, updateAttr] = useAttrsState<GETCellAttrs>(ctx, initialAttrs)
+  const [attrs, updateAttr] = useAttrsState(ctx, initialAttrs)
   return (
     <div className="rounded-md border border-solid border-gray-300 font-inter font-medium text-gray-600">
-      <div className="border-b-solid flex flex-wrap justify-between gap-y-3 border-b border-b-gray-300 bg-blue-100 p-3">
-        <Input
-          label="Assign To"
-          name="assign_to"
-          defaultValue={attrs['result_variable']}
-          onChange={updateAttr('result_variable')}
-        />
+      <div className="border-b-solid flex gap-x-5 gap-y-3 border-b border-b-gray-300 bg-blue-100 p-3">
         <Select
           name="connection"
           label="Connection"
@@ -33,8 +27,15 @@ const App = ({ initialAttrs, ctx }: AppProps) => {
           onChange={updateAttr('connection')}
           orientation="horiz"
         />
+        <Input
+          label="Assign To"
+          name="assign_to"
+          defaultValue={attrs['result_variable']}
+          onChange={updateAttr('result_variable')}
+          orientation="horiz"
+        />
       </div>
-      <div className="flex space-x-4 p-3">
+      <div className="flex gap-x-5 p-3">
         {attrs.connection && (
           <SearchSelect<GVK>
             className="max-w-full"

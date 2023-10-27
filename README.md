@@ -32,5 +32,6 @@ mix esbuild default
 ```
 npx tailwindcss --content './assets/{get_cell,shared}/**/*.{ts,tsx}'  -i assets/get_cell/main.css -o ./lib/assets/get_cell/main.css --watch
 npx tailwindcss --content './assets/{connection_cell,shared}/**/*.{ts,tsx}'  -i assets/connection_cell/main.css -o ./lib/assets/connection_cell/main.css --watch
+npx tailwindcss --content './assets/{apply_cell,shared}/**/*.{ts,tsx}'  -i assets/apply_cell/main.css -o ./lib/assets/apply_cell/main.css --watch
 
 ```

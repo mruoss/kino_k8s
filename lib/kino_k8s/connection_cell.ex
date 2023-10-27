@@ -17,7 +17,8 @@ defmodule KinoK8s.ConnectionCell do
         source_type: attrs["source_type"] || @default_source_type,
         source: attrs["source"] || @default_file,
         running_on_k8s: File.exists?("/var/run/secrets/kubernetes.io/serviceaccount"),
-        opts: %{"insecure_skip_tls_verify" => true}
+        opts: %{"insecure_skip_tls_verify" => true},
+        mix_env: Mix.env()
       )
 
     {:ok, ctx}
