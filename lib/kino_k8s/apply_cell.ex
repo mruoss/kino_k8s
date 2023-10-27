@@ -24,7 +24,7 @@ defmodule KinoK8s.ApplyCell do
     ctx =
       assign(ctx,
         connections: [],
-        connection: attrs[:connection],
+        connection: nil,
         method: attrs[:method] || "apply",
         methods: @available_methods,
         result_variable:

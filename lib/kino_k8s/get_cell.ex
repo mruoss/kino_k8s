@@ -12,7 +12,7 @@ defmodule KinoK8s.GETCell do
       assign(ctx,
         mix_env: Mix.env(),
         connections: [],
-        connection: attrs[:connection],
+        connection: nil,
         gvk: attrs[:gvk],
         namespaces: attrs[:namespaces],
         namespace: attrs[:namespace],

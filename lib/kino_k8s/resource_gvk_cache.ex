@@ -86,7 +86,7 @@ defmodule KinoK8s.ResourceGVKCache do
   end
 
   def handle_call({:get_gvks, conn_hash}, _from, state) do
-    {:reply, get_in(state, [conn_hash, :gvks]), state}
+    {:reply, get_in(state, [conn_hash, :gvks]) || [], state}
   end
 
   def handle_call({:get_conn, conn_hash}, _from, state) do

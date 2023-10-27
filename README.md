@@ -23,12 +23,20 @@ be found at <https://hexdocs.pm/kino_k8s>.
 
 ### Build and Watch Javascript and CSS
 
-```
+```bash
 npm start
 ```
 
 ### Build for Production
 
-```
+```bash
 npm run build
+```
+
+### Install and run livebook
+
+```bash
+mix escript.install hex livebook
+MIX_ENV=dev livebook server
+# open the demo.livemd
 ```
