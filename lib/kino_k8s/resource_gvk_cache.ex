@@ -58,7 +58,7 @@ defmodule KinoK8s.ResourceGVKCache do
   @impl true
   def handle_info({:update, conn_hash}, state) do
     load_gvks(get_in(state, [conn_hash, :conn]), conn_hash, self())
-    Process.send_after(self(), :update, @update_frequency * 1000)
+    Process.send_after(self(), {:update, conn_hash}, @update_frequency * 1000)
     {:noreply, state}
   end
 
@@ -110,5 +110,5 @@ defmodule KinoK8s.ResourceGVKCache do
     end)
   end
 
-  defp hash(conn), do: :erlang.phash2(conn)
+  def hash(conn), do: :erlang.phash2(conn)
 end

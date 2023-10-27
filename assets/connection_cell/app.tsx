@@ -36,7 +36,7 @@ const App = ({ initialAttrs, ctx }: AppProps) => {
           options={source_type_options}
           selectedOption={attrs['source_type']}
           onChange={updateAttr('source_type')}
-          orientation="vert"
+          orientation="horiz"
         />
         {attrs['source_type'] != 'k8s' && (
           <Input
@@ -70,7 +70,7 @@ const App = ({ initialAttrs, ctx }: AppProps) => {
               insecure_skip_tls_verify: JSON.parse(value),
             })
           }
-          orientation="vert"
+          orientation="horiz"
         />
       </div>
     </div>

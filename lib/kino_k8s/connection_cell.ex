@@ -40,10 +40,9 @@ defmodule KinoK8s.ConnectionCell do
         opts
         |> Map.filter(fn {_, value} -> value !== false end)
         |> Map.take(["context", "insecure_skip_tls_verify"])
-        |> Enum.map(fn {key, value} -> {String.to_existing_atom(key), value} end)
-        |>dbg
+        |> Enum.map(fn {key, value} -> {String.to_atom(key), value} end)
 
-      expr =
+        expr =
         case source_type do
           "file" -> quote do: K8s.Conn.from_file(unquote(source), unquote(opts))
           "env" -> quote do: K8s.Conn.from_env(unquote(source), unquote(opts))

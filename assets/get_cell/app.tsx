@@ -14,28 +14,41 @@ interface AppProps {
 const App = ({ initialAttrs, ctx }: AppProps) => {
   const [attrs, updateAttr] = useAttrsState<GETCellAttrs>(ctx, initialAttrs)
   return (
-    <div className="font-inter rounded-md border border-solid border-gray-300 font-medium text-gray-600">
-      <div className="border-b-solid border-b border-b-gray-300 bg-blue-100 p-3">
+    <div className="rounded-md border border-solid border-gray-300 font-inter font-medium text-gray-600">
+      <div className="border-b-solid flex flex-wrap justify-between gap-y-3 border-b border-b-gray-300 bg-blue-100 p-3">
         <Input
           label="Assign To"
           name="assign_to"
           defaultValue={attrs['result_variable']}
           onChange={updateAttr('result_variable')}
         />
+        <Select
+          name="connection"
+          label="Connection"
+          options={attrs.connections.map((connection) => ({
+            label: connection.variable,
+            value: connection.variable,
+          }))}
+          selectedOption={attrs.connection?.variable}
+          onChange={updateAttr('connection')}
+          orientation="horiz"
+        />
       </div>
       <div className="flex space-x-4 p-3">
-        <SearchSelect<GVK>
-          className="max-w-full"
-          name="gvk"
-          label="Resource Kind"
-          onSearch={updateAttr('search_term')}
-          searchTerm={attrs['search_term']}
-          resultItemsKeyField={'index'}
-          resultItems={attrs['search_result_items']}
-          onSelect={updateAttr('gvk')}
-          itemRenderer={(item: GVK) => <GVKOption gvk={item} />}
-          selectedValue={attrs['gvk']?.kind}
-        />
+        {attrs.connection && (
+          <SearchSelect<GVK>
+            className="max-w-full"
+            name="gvk"
+            label="Resource Kind"
+            onSearch={updateAttr('search_term')}
+            searchTerm={attrs['search_term']}
+            resultItemsKeyField={'index'}
+            resultItems={attrs['search_result_items']}
+            onSelect={updateAttr('gvk')}
+            itemRenderer={(item: GVK) => <GVKOption gvk={item} />}
+            selectedValue={attrs['gvk']?.kind}
+          />
+        )}
         {attrs['namespaces'] && (
           <Select
             name="namespace"

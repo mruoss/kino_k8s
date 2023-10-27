@@ -22,7 +22,7 @@ const Select = <ValueType,>({
   <div
     className={classNames(
       {
-        'flex flex-row items-baseline': orientation == 'vert',
+        'flex flex-row items-baseline': orientation == 'horiz',
       },
       className,
     )}
@@ -31,8 +31,8 @@ const Select = <ValueType,>({
       htmlFor={name}
       className={classNames(
         {
-          block: orientation == 'horiz',
-          'pr-1 uppercase': orientation == 'vert',
+          block: orientation == 'vert',
+          'pr-1 uppercase': orientation == 'horiz',
         },
         'mb-1 text-sm font-medium',
       )}
@@ -44,7 +44,7 @@ const Select = <ValueType,>({
       defaultValue={selectedOption}
       onChange={(e) => onChange(e!.target!.value)}
       className={classNames(
-        { 'block w-full': orientation == 'horiz' },
+        { 'block w-full': orientation == 'vert' },
         ' appearance-none rounded-lg border border-gray-300 bg-gray-50 bg-caret-down bg-[length:10px] bg-[center_right_10px] bg-no-repeat p-2 pr-5 text-sm focus:border-blue-500 focus:ring-blue-500',
       )}
     >

@@ -27,17 +27,15 @@ defmodule KinoK8s.GETCell do
          )}
 
       :otherwise ->
-        {:ok, conn} = K8s.Conn.from_file(kubeconfig, insecure_skip_tls_verify: true)
-        conn_hash = ResourceGVKCache.init_cache(conn)
-
         ctx =
           assign(ctx,
-            gvk: attrs["gvk"],
-            namespaces: attrs["namespaces"],
-            namespace: attrs["namespace"],
-            resources: attrs["resources"],
-            resource: attrs["resource"],
-            conn_hash: conn_hash,
+            connections: [],
+            connection: attrs[:connection],
+            gvk: attrs[:gvk],
+            namespaces: attrs[:namespaces],
+            namespace: attrs[:namespace],
+            resources: attrs[:resources],
+            resource: attrs[:resource],
             result_variable:
               Kino.SmartCell.prefixed_var_name("k8s_resource", attrs["result_variable"])
           )
@@ -52,6 +50,13 @@ defmodule KinoK8s.GETCell do
   end
 
   @impl true
+  def handle_event("update_connection", variable, ctx) do
+    connection = Enum.find(ctx.assigns.connections, &(&1.variable == variable))
+    {:noreply, ctx |> assign(connection: connection) |> broadcast_update}
+  end
+
+
+  @impl true
   def handle_event("update_result_variable", variable, ctx) do
     ctx =
       if Kino.SmartCell.valid_variable_name?(variable) do
@@ -64,7 +69,7 @@ defmodule KinoK8s.GETCell do
   end
 
   def handle_event("update_search_term", search_term, ctx) do
-    case perform_search(search_term, ctx.assigns.conn_hash) do
+    case perform_search(search_term, ctx.assigns.connection.conn_hash) do
       [gvk] ->
         handle_event("update_gvk", gvk, ctx)
 
@@ -105,6 +110,26 @@ defmodule KinoK8s.GETCell do
      |> broadcast_update()}
   end
 
+  @impl true
+  def handle_info({:connections, connections}, ctx) do
+    connection = List.first(connections)
+    {:noreply,
+     ctx
+     |> assign(connections: connections, connection: ctx.assigns.connection || connection)
+     |> broadcast_update()}
+  end
+
+  @impl true
+  def scan_binding(pid, binding, _env) do
+    connections =
+      for {key, value} <- binding,
+          is_atom(key),
+          is_struct(value, K8s.Conn),
+          do: %{variable: Atom.to_string(key), conn_hash: ResourceGVKCache.hash(value)}
+
+    send(pid, {:connections, connections})
+  end
+
   defp broadcast_update(ctx) do
     broadcast_event(ctx, "update", get_js_attrs(ctx))
     ctx
@@ -123,7 +148,7 @@ defmodule KinoK8s.GETCell do
   def to_source(attrs)
       when not (is_nil(attrs.gvk) or is_nil(attrs.resource)) do
     %{
-      conn_hash: conn_hash,
+      connection: connection,
       result_variable: result_variable,
       namespace: namespace,
       resource: resource
@@ -135,11 +160,9 @@ defmodule KinoK8s.GETCell do
       if is_nil(namespace), do: [name: resource], else: [name: resource, namespace: namespace]
 
     quote do
-      conn = KinoK8s.ResourceGVKCache.get_conn(unquote(conn_hash))
-
       {:ok, unquote(quoted_var(result_variable))} =
         K8s.Client.get(unquote(api_version), unquote(gvk_name), unquote(path_params))
-        |> K8s.Client.put_conn(conn)
+        |> K8s.Client.put_conn(unquote(quoted_var(connection.variable)))
         |> K8s.Client.run()
 
       unquote(quoted_var(result_variable)) |> Ymlr.document!() |> IO.puts()
@@ -198,7 +221,7 @@ defmodule KinoK8s.GETCell do
   defp quoted_var(string), do: {String.to_atom(string), [], nil}
 
   defp conn(ctx) do
-    conn = ResourceGVKCache.get_conn(ctx.assigns.conn_hash)
+    conn = ResourceGVKCache.get_conn(ctx.assigns.connection.conn_hash)
     conn
   end
 end
