@@ -5,17 +5,18 @@ import SearchSelect from '../shared/form/search_select'
 import Select from '../shared/form/select'
 import GVKOption from '../shared/gvk_option'
 import { GVK } from '../shared/types'
-import { GETCellAttrs } from './types'
+import { ListCellAttrs } from './types'
 
 interface AppProps {
-  initialAttrs: GETCellAttrs
+  initialAttrs: ListCellAttrs
   ctx: KinoContext
 }
 
-const App = ({ initialAttrs, ctx }: AppProps) => {
+const App: React.FC<AppProps> = ({ initialAttrs, ctx }) => {
   const [attrs, updateAttr] = useAttrsState(ctx, initialAttrs)
+
   return (
-    <div className="font-inter rounded-md border border-solid border-gray-300 font-medium text-gray-600">
+    <div className="rounded-md border border-solid border-gray-300 font-inter font-medium text-gray-600">
       <div className="border-b-solid flex gap-x-5 gap-y-3 border-b border-b-gray-300 bg-blue-100 p-3">
         <Select
           name="connection"
@@ -26,6 +27,17 @@ const App = ({ initialAttrs, ctx }: AppProps) => {
           }))}
           selectedOption={attrs.connection?.variable?.toString()}
           onChange={updateAttr('connection')}
+          orientation="horiz"
+        />
+        <Select
+          name="result_type"
+          label="Result Type"
+          options={attrs.result_types.map((result_type) => ({
+            label: result_type.toUpperCase(),
+            value: result_type,
+          }))}
+          selectedOption={attrs.result_type}
+          onChange={updateAttr('result_type')}
           orientation="horiz"
         />
         <Input
@@ -52,7 +64,7 @@ const App = ({ initialAttrs, ctx }: AppProps) => {
             placeholder="apps/v1 Deployment"
           />
         )}
-        {attrs['namespaces'] && (
+        {attrs.namespaces && (
           <Select
             name="namespace"
             label="Namespace"
@@ -62,18 +74,6 @@ const App = ({ initialAttrs, ctx }: AppProps) => {
             }))}
             selectedOption={attrs['namespace']}
             onChange={updateAttr('namespace')}
-          />
-        )}
-        {attrs['resources'] && (
-          <Select
-            name="resource"
-            label="Resource Name"
-            options={attrs.resources.map((ns) => ({
-              label: ns,
-              value: ns,
-            }))}
-            selectedOption={attrs['resource']}
-            onChange={updateAttr('resource')}
           />
         )}
       </div>

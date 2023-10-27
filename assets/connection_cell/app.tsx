@@ -9,7 +9,7 @@ interface AppProps {
   ctx: KinoContext
 }
 
-const App = ({ initialAttrs, ctx }: AppProps) => {
+const App: React.FC<AppProps> = ({ initialAttrs, ctx }) => {
   const [attrs, updateAttr] = useAttrsState(ctx, initialAttrs)
   const source_type_options = [
     { label: 'File', value: 'file' },

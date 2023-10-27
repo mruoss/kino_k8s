@@ -600,6 +600,10 @@ video {
   min-width: 100%;
 }
 
+.max-w-full {
+  max-width: 100%;
+}
+
 .flex-none {
   flex: none;
 }
@@ -616,10 +620,6 @@ video {
 
 .flex-row {
   flex-direction: row;
-}
-
-.flex-wrap {
-  flex-wrap: wrap;
 }
 
 .items-center {
@@ -670,6 +670,10 @@ video {
 
 .border-r {
   border-right-width: 1px;
+}
+
+.border-t {
+  border-top-width: 1px;
 }
 
 .border-solid {
