@@ -17,7 +17,7 @@ defmodule KinoK8s.ConnectionCell do
         source_type: attrs[:source_type] || @default_source_type,
         source: attrs[:source] || @default_file,
         opts: attrs[:opts] || %{"insecure_skip_tls_verify" => true},
-        running_on_k8s: File.exists?("/var/run/secrets/kubernetes.io/serviceaccount"),
+        # running_on_k8s: File.exists?("/var/run/secrets/kubernetes.io/serviceaccount"),
         mix_env: Mix.env()
       )
 
@@ -90,7 +90,7 @@ defmodule KinoK8s.ConnectionCell do
         "k8s" -> assign(ctx, source_type: "k8s", source: nil)
       end
 
-    {:noreply, broadcast_update(ctx)}
+    {:noreply, ctx |> assign(opts: Map.delete(ctx.assigns.opts, "context")) |> broadcast_update()}
   end
 
   def handle_event("update_source", source, ctx) do

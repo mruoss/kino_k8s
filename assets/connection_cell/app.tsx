@@ -15,8 +15,8 @@ const App: React.FC<AppProps> = ({ initialAttrs, ctx }) => {
     { label: 'File', value: 'file' },
     { label: 'Environment Variable', value: 'env' },
   ]
-  if (attrs['running_on_k8s'])
-    source_type_options.push({ label: 'K8s Service Account', value: 'k8s' })
+  // if (attrs['running_on_k8s'])
+  source_type_options.push({ label: 'K8s Service Account', value: 'k8s' })
 
   return (
     <div className="rounded-md border border-solid border-gray-300 font-inter font-medium text-gray-600">
