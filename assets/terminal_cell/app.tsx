@@ -24,6 +24,17 @@ const App = ({ initialAttrs, ctx }: AppProps) => {
           onChange={updateAttr('connection')}
           orientation="horiz"
         />
+        <Select
+          name="connect_to"
+          label="connect_to"
+          options={attrs.connect_tos.map((connect_to) => ({
+            label: connect_to,
+            value: connect_to,
+          }))}
+          selectedOption={attrs.connect_to?.toString()}
+          onChange={updateAttr('connect_to')}
+          orientation="horiz"
+        />
       </div>
       <div className="flex gap-x-5 p-3">
         {attrs['namespaces'] && (

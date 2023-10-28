@@ -1,7 +1,7 @@
 defmodule KinoK8s.ListCell do
   use Kino.JS, assets_path: "lib/assets/list_cell"
   use Kino.JS.Live
-  use Kino.SmartCell, name: "Kubernetes List Resources"
+  use Kino.SmartCell, name: "K8s - List Resources"
 
   alias KinoK8s.ResourceGVKCache
   alias KinoK8s.K8sHelper

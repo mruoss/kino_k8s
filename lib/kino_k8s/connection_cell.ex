@@ -1,7 +1,7 @@
 defmodule KinoK8s.ConnectionCell do
   use Kino.JS, assets_path: "lib/assets/connection_cell"
   use Kino.JS.Live
-  use Kino.SmartCell, name: "Kubernetes Cluster Connection"
+  use Kino.SmartCell, name: "K8s - Cluster Connection"
 
   alias KinoK8s.ResourceGVKCache
 

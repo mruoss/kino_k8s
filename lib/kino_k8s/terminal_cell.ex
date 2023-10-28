@@ -3,7 +3,7 @@ defmodule KinoK8s.TerminalCell do
   alias KinoK8s.K8sHelper
   use Kino.JS, assets_path: "lib/assets/terminal_cell"
   use Kino.JS.Live
-  use Kino.SmartCell, name: "Kubernetes PodExec Terminal"
+  use Kino.SmartCell, name: "K8s - Pod Terminal (Exec/Logs)"
 
   @impl true
   def init(attrs, ctx) do
@@ -13,6 +13,8 @@ defmodule KinoK8s.TerminalCell do
        mix_env: Mix.env(),
        connections: [],
        connection: nil,
+       connect_tos: ["exec", "logs"],
+       connect_to: attrs[:connect_to] || "exec",
        namespaces: attrs[:namespaces],
        namespace: attrs[:namespace],
        pods: attrs[:pods],
@@ -39,11 +41,18 @@ defmodule KinoK8s.TerminalCell do
         connection: connection,
         namespace: namespace,
         pod: pod,
-        container: container
+        container: container,
+        connect_to: connect_to
       } = attrs
 
+      func =
+        case connect_to do
+          "exec" -> :exec
+          "logs" -> :log
+        end
+
       quote do
-        KinoK8s.KinoTerminal.open(
+        KinoK8s.KinoTerminal.unquote(func)(
           unquote(quoted_var(connection.variable)),
           unquote(namespace),
           unquote(pod),
@@ -59,7 +68,11 @@ defmodule KinoK8s.TerminalCell do
   @impl true
   def handle_event("update_connection", variable, ctx) do
     connection = Enum.find(ctx.assigns.connections, &(&1.variable == variable))
-    {:noreply, ctx |> assign(connection: connection) |> set_namespaces() |> broadcast_update}
+    {:noreply, ctx |> assign(connection: connection) |> set_namespaces() |> broadcast_update()}
+  end
+
+  def handle_event("update_connect_to", connect_to, ctx) do
+    {:noreply, ctx |> assign(connect_to: connect_to) |> broadcast_update()}
   end
 
   def handle_event("update_namespace", namespace, ctx) do

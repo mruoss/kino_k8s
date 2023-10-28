@@ -30,20 +30,28 @@ defmodule KinoK8s.KinoTerminal do
       container = "nginx"
       command = "/bin/bash"
 
-      KinoK8s.KinoTerminal.open(conn, namespace, pod, container: container, command: command)
+      KinoK8s.KinoTerminal.exec(conn, namespace, pod, container: container, command: command)
   """
-  def open(conn, namespace, pod, opts \\ []) do
-    ctx =
-      Kino.JS.Live.new(__MODULE__,
-        conn: conn,
-        namespace: namespace,
-        pod: pod,
-        container: Keyword.get(opts, :container),
-        command: Keyword.get(opts, :command, "/bin/sh")
-      )
-
-    Kino.JS.Live.cast(ctx, :open_terminal)
+  def exec(conn, namespace, pod, opts \\ []) do
+    ctx = new(conn, namespace, pod, opts)
+    Kino.JS.Live.cast(ctx, :open_exec)
     ctx
+  end
+
+  def log(conn, namespace, pod, opts \\ []) do
+    ctx = new(conn, namespace, pod, opts)
+    Kino.JS.Live.cast(ctx, :open_log)
+    ctx
+  end
+
+  defp new(conn, namespace, pod, opts) do
+    Kino.JS.Live.new(__MODULE__,
+      conn: conn,
+      namespace: namespace,
+      pod: pod,
+      container: Keyword.get(opts, :container),
+      command: Keyword.get(opts, :command, "/bin/sh")
+    )
   end
 
   @impl true
@@ -58,7 +66,7 @@ defmodule KinoK8s.KinoTerminal do
   end
 
   @impl true
-  def handle_cast(:open_terminal, ctx) do
+  def handle_cast(:open_exec, ctx) do
     {:ok, send_to_websocket} =
       K8s.Client.connect(
         "v1",
@@ -67,6 +75,22 @@ defmodule KinoK8s.KinoTerminal do
         container: ctx.assigns.container,
         command: ctx.assigns.command,
         tty: true
+      )
+      |> K8s.Client.put_conn(ctx.assigns.conn)
+      |> K8s.Client.stream_to(self())
+
+    {:noreply, assign(ctx, send_to_websocket: send_to_websocket)}
+  end
+
+  def handle_cast(:open_log, ctx) do
+    {:ok, send_to_websocket} =
+      K8s.Client.connect(
+        "v1",
+        "pods/log",
+        [namespace: ctx.assigns.namespace, name: ctx.assigns.pod],
+        container: ctx.assigns.container,
+        tailLines: 100,
+        follow: true
       )
       |> K8s.Client.put_conn(ctx.assigns.conn)
       |> K8s.Client.stream_to(self())
@@ -119,7 +143,7 @@ defmodule KinoK8s.KinoTerminal do
         </div>
       `;
 
-      const k8s_xterm = new Terminal();
+      const k8s_xterm = new Terminal({convertEol: true});
       k8s_xterm.onKey((key) => ctx.pushEvent("key", key.key));
       k8s_xterm.open(ctx.root.querySelector(".k8s-xtermjs-container"));
       ctx.handleEvent("print-terminal", (data) => k8s_xterm.write(data));
