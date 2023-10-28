@@ -9,6 +9,7 @@ defmodule KinoK8s.Application do
     Kino.SmartCell.register(KinoK8s.ConnectionCell)
     Kino.SmartCell.register(KinoK8s.GETCell)
     Kino.SmartCell.register(KinoK8s.ListCell)
+    Kino.SmartCell.register(KinoK8s.TerminalCell)
 
     Supervisor.start_link(if(env == :test, do: [], else: [KinoK8s.ResourceGVKCache]),
       strategy: :one_for_one,

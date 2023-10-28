@@ -1,7 +1,7 @@
 defmodule KinoK8s.GETCell do
   use Kino.JS, assets_path: "lib/assets/get_cell"
   use Kino.JS.Live
-  use Kino.SmartCell, name: "GET Resource"
+  use Kino.SmartCell, name: "Kubernetes GET Resource"
 
   alias KinoK8s.ResourceGVKCache
   alias KinoK8s.K8sHelper
@@ -32,7 +32,14 @@ defmodule KinoK8s.GETCell do
   @impl true
   def handle_event("update_connection", variable, ctx) do
     connection = Enum.find(ctx.assigns.connections, &(&1.variable == variable))
-    {:noreply, ctx |> assign(connection: connection) |> broadcast_update}
+
+    {
+      :noreply,
+      ctx
+      |> assign(connection: connection)
+      |> set_gvk(nil)
+      |> broadcast_update()
+    }
   end
 
   @impl true
@@ -50,7 +57,7 @@ defmodule KinoK8s.GETCell do
   def handle_event("update_search_term", search_term, ctx) do
     case perform_search(search_term, ctx.assigns.connection.conn_hash) do
       [gvk] ->
-        handle_event("update_gvk", gvk, ctx)
+        {:noreply, ctx |> set_gvk(gvk) |> broadcast_update()}
 
       search_result_items ->
         send_event(ctx, ctx.origin, "update", %{
@@ -110,6 +117,14 @@ defmodule KinoK8s.GETCell do
     send(pid, {:connections, connections})
   end
 
+  defp set_gvk(ctx, gvk) do
+    send_event(ctx, ctx.origin, "update", %{search_term: "", search_result_items: []})
+
+    ctx
+    |> assign(gvk: gvk)
+    |> set_namespaces(gvk)
+  end
+
   defp broadcast_update(ctx) do
     broadcast_event(ctx, "update", get_js_attrs(ctx))
     ctx
@@ -164,11 +179,13 @@ defmodule KinoK8s.GETCell do
     end
   end
 
-  defp set_namespaces(ctx, %{"namespaced" => false}) do
+  defp set_namespaces(ctx, nil) do
     ctx
     |> assign(namespaces: nil, namespace: nil)
     |> set_resources(nil)
   end
+
+  defp set_namespaces(ctx, %{"namespaced" => false}), do: set_namespaces(ctx, nil)
 
   defp set_namespaces(ctx, _gvk) do
     with {:ok, namespaces} <- K8sHelper.namespaces(conn(ctx)) do
@@ -180,6 +197,10 @@ defmodule KinoK8s.GETCell do
     else
       _ -> ctx
     end
+  end
+
+  defp set_resources(ctx, nil) do
+    assign(ctx, resources: nil, resource: nil)
   end
 
   defp set_resources(ctx, namespace) do
@@ -204,7 +225,6 @@ defmodule KinoK8s.GETCell do
   defp quoted_var(string), do: {String.to_atom(string), [], nil}
 
   defp conn(ctx) do
-    conn = ResourceGVKCache.get_conn(ctx.assigns.connection.conn_hash)
-    conn
+    ResourceGVKCache.get_conn(ctx.assigns.connection.conn_hash)
   end
 end

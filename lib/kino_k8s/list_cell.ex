@@ -1,7 +1,7 @@
 defmodule KinoK8s.ListCell do
   use Kino.JS, assets_path: "lib/assets/list_cell"
   use Kino.JS.Live
-  use Kino.SmartCell, name: "List Resources"
+  use Kino.SmartCell, name: "Kubernetes List Resources"
 
   alias KinoK8s.ResourceGVKCache
   alias KinoK8s.K8sHelper
@@ -34,7 +34,14 @@ defmodule KinoK8s.ListCell do
   @impl true
   def handle_event("update_connection", variable, ctx) do
     connection = Enum.find(ctx.assigns.connections, &(&1.variable == variable))
-    {:noreply, ctx |> assign(connection: connection) |> broadcast_update}
+
+    {
+      :noreply,
+      ctx
+      |> assign(connection: connection)
+      |> set_gvk(nil)
+      |> broadcast_update()
+    }
   end
 
   @impl true
@@ -52,7 +59,7 @@ defmodule KinoK8s.ListCell do
   def handle_event("update_search_term", search_term, ctx) do
     case perform_search(search_term, ctx.assigns.connection.conn_hash) do
       [gvk] ->
-        handle_event("update_gvk", gvk, ctx)
+        {:noreply, ctx |> set_gvk(gvk) |> broadcast_update()}
 
       search_result_items ->
         send_event(ctx, ctx.origin, "update", %{
@@ -65,15 +72,7 @@ defmodule KinoK8s.ListCell do
   end
 
   def handle_event("update_gvk", gvk, ctx) do
-    send_event(ctx, ctx.origin, "update", %{search_result_items: []})
-
-    {
-      :noreply,
-      ctx
-      |> assign(gvk: gvk)
-      |> set_namespaces(gvk)
-      |> broadcast_update()
-    }
+    {:noreply, ctx |> set_gvk(gvk) |> broadcast_update()}
   end
 
   def handle_event("update_namespace", namespace, ctx) do
@@ -109,6 +108,14 @@ defmodule KinoK8s.ListCell do
           do: %{variable: Atom.to_string(key), conn_hash: ResourceGVKCache.hash(value)}
 
     send(pid, {:connections, connections})
+  end
+
+  defp set_gvk(ctx, gvk) do
+    send_event(ctx, ctx.origin, "update", %{search_term: "", search_result_items: []})
+
+    ctx
+    |> assign(gvk: gvk)
+    |> set_namespaces(gvk)
   end
 
   defp broadcast_update(ctx) do
@@ -179,6 +186,10 @@ defmodule KinoK8s.ListCell do
     end
   end
 
+  defp set_namespaces(ctx, nil) do
+    assign(ctx, namespaces: nil, namespace: nil)
+  end
+
   defp set_namespaces(ctx, %{"namespaced" => false}) do
     assign(ctx, namespaces: nil, namespace: nil)
   end
@@ -203,7 +214,6 @@ defmodule KinoK8s.ListCell do
   defp quoted_var(string), do: {String.to_atom(string), [], nil}
 
   defp conn(ctx) do
-    conn = ResourceGVKCache.get_conn(ctx.assigns.connection.conn_hash)
-    conn
+    ResourceGVKCache.get_conn(ctx.assigns.connection.conn_hash)
   end
 end

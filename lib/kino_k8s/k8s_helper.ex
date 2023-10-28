@@ -17,6 +17,8 @@ defmodule KinoK8s.K8sHelper do
     end
   end
 
+  def pods(conn, namespace), do: resources(conn, "v1", "pod", namespace)
+
   def containers(conn, namespace, pod) do
     with {:ok, pod} <-
            K8s.Client.get("v1", "pod", namespace: namespace, name: pod)
