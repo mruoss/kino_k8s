@@ -5,7 +5,7 @@ defmodule KinoK8s.KinoTerminal do
   use Kino.JS
   use Kino.JS.Live
 
-  @moduledoc """
+  @doc """
   Opens a terminal using xterm.js.
   Expects `connect` to be a function to establish the connection to the
   underlying IO process. The function will be called passing the pid of this
