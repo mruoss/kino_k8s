@@ -1,9 +1,10 @@
 defmodule KinoK8s.TerminalCell do
-  alias KinoK8s.ResourceGVKCache
-  alias KinoK8s.K8sHelper
   use Kino.JS, assets_path: "lib/assets/terminal_cell"
   use Kino.JS.Live
   use Kino.SmartCell, name: "K8s - Pod Terminal (Exec/Logs)"
+
+  alias KinoK8s.ResourceGVKCache
+  alias KinoK8s.K8sHelper
 
   @impl true
   def init(attrs, ctx) do
@@ -45,19 +46,49 @@ defmodule KinoK8s.TerminalCell do
         connect_to: connect_to
       } = attrs
 
-      func =
+      connect_to_pod =
         case connect_to do
-          "exec" -> :exec
-          "logs" -> :log
+          "exec" ->
+            quote do
+              {:ok, send_to_websocket} =
+                K8s.Client.connect(
+                  "v1",
+                  "pods/exec",
+                  [namespace: unquote(namespace), name: unquote(pod)],
+                  container: unquote(container),
+                  command: "/bin/sh",
+                  tty: true
+                )
+                |> K8s.Client.put_conn(unquote(quoted_var(connection.variable)))
+                |> K8s.Client.stream_to(terminal_kino_pid)
+
+              send_to_websocket
+            end
+
+          "logs" ->
+            quote do
+              {:ok, send_to_websocket} =
+                K8s.Client.connect(
+                  "v1",
+                  "pods/log",
+                  [namespace: unquote(namespace), name: unquote(pod)],
+                  container: unquote(container),
+                  tailLines: 100,
+                  follow: true
+                )
+                |> K8s.Client.put_conn(unquote(quoted_var(connection.variable)))
+                |> K8s.Client.stream_to(terminal_kino_pid)
+
+              send_to_websocket
+            end
         end
 
       quote do
-        KinoK8s.KinoTerminal.unquote(func)(
-          unquote(quoted_var(connection.variable)),
-          unquote(namespace),
-          unquote(pod),
-          container: unquote(container)
-        )
+        connect_to_pod = fn terminal_kino_pid ->
+          unquote(connect_to_pod)
+        end
+
+        KinoK8s.KinoTerminal.open(connect_to_pod)
       end
       |> Kino.SmartCell.quoted_to_string()
     else

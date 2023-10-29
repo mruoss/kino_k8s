@@ -5,97 +5,29 @@ defmodule KinoK8s.KinoTerminal do
   use Kino.JS
   use Kino.JS.Live
 
-  @doc """
-  Connects to a Kubernetes Pod and opens a Terminal.
-
-  ### Arguments
-
-  - `conn` - a `%K8s.Conn{}` struct that can be optained by calling `K8s.Conn.from_file/2`
-  - `namespace` - The namespace your pod runs in
-  - `pod` - The name of your pod
-
-  ### Options
-
-  - `container` - If your pod runs multiple containers, define the container you want to connect to.
-  - `command` - optional. The shell that is executed once connected. Defaults to `/bin/sh`.
-
-  ### Example
-
-      {:ok, conn} = K8s.Conn.from_file("~/.kube/config", context: "some_local_cluster")
-      # For local clusters, you might want to skip TLS verification
-      conn = struct!(conn, insecure_skip_tls_verify: true)
-
-      namespace = "default"
-      pod = "nginx-deployment-6595874d85-5kdf4"
-      container = "nginx"
-      command = "/bin/bash"
-
-      KinoK8s.KinoTerminal.exec(conn, namespace, pod, container: container, command: command)
+  @moduledoc """
+  Opens a terminal using xterm.js.
+  Expects `connect` to be a function to establish the connection to the
+  underlying IO process. The function will be called passing the pid of this
+  Kino and is expected to return a function that should be used to send messages
+  to the process.
   """
-  def exec(conn, namespace, pod, opts \\ []) do
-    ctx = new(conn, namespace, pod, opts)
-    Kino.JS.Live.cast(ctx, :open_exec)
-    ctx
-  end
-
-  def log(conn, namespace, pod, opts \\ []) do
-    ctx = new(conn, namespace, pod, opts)
-    Kino.JS.Live.cast(ctx, :open_log)
-    ctx
-  end
-
-  defp new(conn, namespace, pod, opts) do
-    Kino.JS.Live.new(__MODULE__,
-      conn: conn,
-      namespace: namespace,
-      pod: pod,
-      container: Keyword.get(opts, :container),
-      command: Keyword.get(opts, :command, "/bin/sh")
-    )
+  @spec open((kino_terminal_pid :: pid() -> send_to_process :: (term() -> term()))) ::
+          Kino.JS.Live.t()
+  def open(connect) do
+    Kino.JS.Live.new(__MODULE__, %{connect: connect})
   end
 
   @impl true
   def init(attrs, ctx) do
-    {:ok, assign(ctx, Keyword.put(attrs, :buffer, []))}
+    send_to_process = attrs.connect.(self())
+    {:ok, assign(ctx, buffer: [], send_to_process: send_to_process)}
   end
 
   @impl true
   def handle_connect(ctx) do
     buffer = ctx.assigns.buffer |> Enum.reverse() |> IO.iodata_to_binary()
     {:ok, %{buffer: buffer}, ctx}
-  end
-
-  @impl true
-  def handle_cast(:open_exec, ctx) do
-    {:ok, send_to_websocket} =
-      K8s.Client.connect(
-        "v1",
-        "pods/exec",
-        [namespace: ctx.assigns.namespace, name: ctx.assigns.pod],
-        container: ctx.assigns.container,
-        command: ctx.assigns.command,
-        tty: true
-      )
-      |> K8s.Client.put_conn(ctx.assigns.conn)
-      |> K8s.Client.stream_to(self())
-
-    {:noreply, assign(ctx, send_to_websocket: send_to_websocket)}
-  end
-
-  def handle_cast(:open_log, ctx) do
-    {:ok, send_to_websocket} =
-      K8s.Client.connect(
-        "v1",
-        "pods/log",
-        [namespace: ctx.assigns.namespace, name: ctx.assigns.pod],
-        container: ctx.assigns.container,
-        tailLines: 100,
-        follow: true
-      )
-      |> K8s.Client.put_conn(ctx.assigns.conn)
-      |> K8s.Client.stream_to(self())
-
-    {:noreply, assign(ctx, send_to_websocket: send_to_websocket)}
   end
 
   @impl true
@@ -117,7 +49,7 @@ defmodule KinoK8s.KinoTerminal do
 
   def handle_info({:close, _}, ctx) do
     broadcast_event(ctx, "dispose-terminal", nil)
-    {:noreply, assign(ctx, send_to_websocket: nil, buffer: [])}
+    {:noreply, assign(ctx, send_to_process: nil, buffer: [])}
   end
 
   def handle_info(_other_msg, ctx) do
@@ -126,16 +58,15 @@ defmodule KinoK8s.KinoTerminal do
 
   @impl true
   def handle_event("key", key, ctx) do
-    ctx.assigns.send_to_websocket.({:stdin, key})
+    ctx.assigns.send_to_process.({:stdin, key})
     {:noreply, ctx}
   end
 
   asset "main.js" do
     """
-    import "https://cdn.jsdelivr.net/npm/xterm@5.0.0/lib/xterm.min.js";
-
-    export function init(ctx, attrs) {
-      ctx.importCSS("https://cdn.jsdelivr.net/npm/xterm@5.0.0/css/xterm.css");
+    export async function init(ctx, attrs) {
+      await ctx.importCSS("https://cdn.jsdelivr.net/npm/xterm@5.0.0/css/xterm.css");
+      await ctx.importJS("https://cdn.jsdelivr.net/npm/xterm@5.0.0/lib/xterm.min.js");
 
       ctx.root.innerHTML = `
         <div id="k8s-terminal">
