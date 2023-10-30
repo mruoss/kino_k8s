@@ -6,8 +6,8 @@ defmodule KinoK8s.ListCell do
   alias KinoK8s.ResourceGVKCache
   alias KinoK8s.K8sHelper
 
-  @request_types ["list", "watch"]
-  @result_types %{"list" => ["list", "stream"], "watch" => ["stream"]}
+  @request_types ["get", "list", "watch"]
+  @result_types %{"get" => nil, "list" => ["list", "stream"], "watch" => ["stream"]}
 
   @impl true
   def init(attrs, ctx) do
@@ -86,9 +86,11 @@ defmodule KinoK8s.ListCell do
   end
 
   def handle_event("update_request_type", request_type, ctx) do
+    result_type = @result_types[request_type] |> List.wrap() |> List.first()
     {:noreply,
      ctx
-     |> assign(request_type: request_type, result_type: List.first(@result_types[request_type]))
+     |> assign(request_type: request_type, result_type: result_type)
+     |> set_namespaces()
      |> broadcast_update()}
   end
 
@@ -125,7 +127,7 @@ defmodule KinoK8s.ListCell do
 
     ctx
     |> assign(gvk: gvk)
-    |> set_namespaces(gvk)
+    |> set_namespaces()
   end
 
   defp broadcast_update(ctx) do
@@ -143,6 +145,34 @@ defmodule KinoK8s.ListCell do
   end
 
   @impl true
+  def to_source(attrs) when attrs.request_type == "get" do
+    if all_fields_filled?(attrs, [:connection, :result_variable, :gvk, :resource]) do
+      %{
+        connection: connection,
+        result_variable: result_variable,
+        namespace: namespace,
+        resource: resource
+      } = attrs
+
+      %{"api_version" => api_version, "name" => gvk_name} = attrs.gvk
+
+      path_params =
+        if is_nil(namespace), do: [name: resource], else: [name: resource, namespace: namespace]
+
+      quote do
+        {:ok, unquote(quoted_var(result_variable))} =
+          K8s.Client.get(unquote(api_version), unquote(gvk_name), unquote(path_params))
+          |> K8s.Client.put_conn(unquote(quoted_var(connection.variable)))
+          |> K8s.Client.run()
+
+        unquote(quoted_var(result_variable)) |> Ymlr.document!() |> IO.puts()
+      end
+      |> Kino.SmartCell.quoted_to_string()
+    else
+      ""
+    end
+  end
+
   def to_source(attrs) do
     if all_fields_filled?(attrs, [:connection, :result_variable, :request_type,:result_type, :gvk]) do
       %{
@@ -202,21 +232,44 @@ defmodule KinoK8s.ListCell do
     end
   end
 
-  defp set_namespaces(ctx, nil) do
-    assign(ctx, namespaces: nil, namespace: nil)
+  defp set_namespaces(ctx) when is_nil(ctx.assigns.gvk) do
+    ctx
+    |> assign(namespaces: nil, namespace: nil)
+    |> set_resources()
   end
 
-  defp set_namespaces(ctx, %{"namespaced" => false}) do
+  defp set_namespaces(%{:assigns => %{:gvk => %{"namespaced" => false}}} = ctx) do
     assign(ctx, namespaces: nil, namespace: nil)
+    |> set_resources()
   end
 
-  defp set_namespaces(ctx, _gvk) do
+  defp set_namespaces(ctx) do
     with {:ok, namespaces} <- K8sHelper.namespaces(conn(ctx)) do
       namespace = List.first(namespaces)
-      namespaces = ["__ALL__" | namespaces]
+      namespaces = if ctx.assigns.request_type == "get", do: ["__ALL__" | namespaces], else: namespaces
 
       ctx
       |> assign(namespaces: namespaces, namespace: namespace)
+      |> set_resources()
+    else
+      _ -> ctx
+    end
+  end
+
+  defp set_resources(ctx) when is_nil(ctx.assigns.namespace) or ctx.assigns.request_type != "get" do
+    assign(ctx, resources: nil, resource: nil)
+  end
+
+  defp set_resources(ctx) do
+    namespace = ctx.assigns.namespace
+    gvk = ctx.assigns.gvk
+
+    with {:ok, resources} <-
+           K8sHelper.resources(conn(ctx), gvk["api_version"], gvk["kind"], namespace) do
+      resource = List.first(resources)
+
+      ctx
+      |> assign(resources: resources, resource: resource)
     else
       _ -> ctx
     end

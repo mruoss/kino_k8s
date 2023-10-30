@@ -2,7 +2,6 @@
   "scripts": {
     "tailwind:build:apply_cell": "tailwindcss --content './assets/{apply_cell,shared}/**/*.{ts,tsx}'  -i assets/apply_cell/main.css -o ./lib/assets/apply_cell/main.css",
     "tailwind:build:connection_cell": "tailwindcss --content './assets/{connection_cell,shared}/**/*.{ts,tsx}'  -i assets/connection_cell/main.css -o ./lib/assets/connection_cell/main.css",
-    "tailwind:build:get_cell": "tailwindcss --content './assets/{get_cell,shared}/**/*.{ts,tsx}'  -i assets/get_cell/main.css -o ./lib/assets/get_cell/main.css",
     "tailwind:build:list_cell": "tailwindcss --content './assets/{list_cell,shared}/**/*.{ts,tsx}'  -i assets/list_cell/main.css -o ./lib/assets/list_cell/main.css",
     "tailwind:build:terminal_cell": "tailwindcss --content './assets/{terminal_cell,shared}/**/*.{ts,tsx}'  -i assets/terminal_cell/main.css -o ./lib/assets/terminal_cell/main.css",
     "tailwind": "npm-run-all --parallel tailwind:build:*",

@@ -15,6 +15,7 @@ interface AppProps {
 
 const App: React.FC<AppProps> = ({ initialAttrs, ctx }) => {
   const [attrs, updateAttr] = useAttrsState(ctx, initialAttrs)
+  const result_types = attrs.result_types[attrs.request_type]
 
   return (
     <>
@@ -43,23 +44,23 @@ const App: React.FC<AppProps> = ({ initialAttrs, ctx }) => {
             onChange={updateAttr('request_type')}
             orientation="horiz"
           />
-          <Select
-            name="result_type"
-            label="Result Type"
-            options={attrs.result_types[attrs.request_type].map(
-              (result_type) => ({
+          {result_types && (
+            <Select
+              name="result_type"
+              label="Result Type"
+              options={result_types.map((result_type) => ({
                 label: result_type.toUpperCase(),
                 value: result_type,
-              }),
-            )}
-            selectedOption={attrs.result_type}
-            onChange={updateAttr('result_type')}
-            orientation="horiz"
-          />
+              }))}
+              selectedOption={attrs.result_type}
+              onChange={updateAttr('result_type')}
+              orientation="horiz"
+            />
+          )}
           <Input
             label="Assign To"
             name="assign_to"
-            defaultValue={attrs['result_variable']}
+            defaultValue={attrs.result_variable}
             onChange={updateAttr('result_variable')}
             orientation="horiz"
           />
@@ -71,12 +72,12 @@ const App: React.FC<AppProps> = ({ initialAttrs, ctx }) => {
               name="gvk"
               label="Resource Kind"
               onSearch={updateAttr('search_term')}
-              searchTerm={attrs['search_term']}
+              searchTerm={attrs.search_term}
               resultItemsKeyField={'index'}
-              resultItems={attrs['search_result_items']}
+              resultItems={attrs.search_result_items}
               onSelect={updateAttr('gvk')}
               itemRenderer={(item: GVK) => <GVKOption gvk={item} />}
-              selectedValue={attrs['gvk']?.kind}
+              selectedValue={attrs.gvk?.kind}
               placeholder="apps/v1 Deployment"
             />
           )}
@@ -88,8 +89,20 @@ const App: React.FC<AppProps> = ({ initialAttrs, ctx }) => {
                 label: ns,
                 value: ns,
               }))}
-              selectedOption={attrs['namespace']}
+              selectedOption={attrs.namespace}
               onChange={updateAttr('namespace')}
+            />
+          )}
+          {attrs.resources && (
+            <Select
+              name="resource"
+              label="Resource Name"
+              options={attrs.resources.map((ns) => ({
+                label: ns,
+                value: ns,
+              }))}
+              selectedOption={attrs.resource}
+              onChange={updateAttr('resource')}
             />
           )}
         </div>
