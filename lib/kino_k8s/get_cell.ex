@@ -1,7 +1,7 @@
 defmodule KinoK8s.GETCell do
   use Kino.JS, assets_path: "lib/assets/get_cell"
   use Kino.JS.Live
-  use Kino.SmartCell, name: "K8s - GET Resource"
+  use Kino.SmartCell, name: "K8s - Get Resource"
 
   alias KinoK8s.ResourceGVKCache
   alias KinoK8s.K8sHelper

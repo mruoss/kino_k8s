@@ -1,7 +1,7 @@
 defmodule KinoK8s.TerminalCell do
   use Kino.JS, assets_path: "lib/assets/terminal_cell"
   use Kino.JS.Live
-  use Kino.SmartCell, name: "K8s - Pod Terminal (Exec/Logs)"
+  use Kino.SmartCell, name: "K8s - Connect to Pod (Exec/Logs)"
 
   alias KinoK8s.ResourceGVKCache
   alias KinoK8s.K8sHelper
