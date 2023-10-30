@@ -4,7 +4,7 @@ defmodule KinoK8s.MixProject do
   def project do
     [
       app: :kino_k8s,
-      version: "0.1.0",
+      version: "1.0.0",
       elixir: "~> 1.15",
       start_permanent: Mix.env() == :prod,
       deps: deps()
@@ -24,7 +24,7 @@ defmodule KinoK8s.MixProject do
     [
       {:k8s, "~> 2.0"},
       {:ymlr, "~> 4.0"},
-      {:kino, "~> 0.11.0"},
+      {:kino, "~> 0.11.0"}
     ]
   end
 end

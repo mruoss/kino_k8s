@@ -15,35 +15,25 @@ defmodule KinoK8s.TerminalCell do
        connections: [],
        connection: nil,
        connect_tos: ["exec", "logs"],
-       connect_to: attrs[:connect_to] || "exec",
-       namespaces: attrs[:namespaces],
-       namespace: attrs[:namespace],
-       pods: attrs[:pods],
-       pod: attrs[:pod],
-       containers: attrs[:containers],
-       container: attrs[:container]
+       connect_to: attrs["connect_to"] || "exec",
+       namespaces: attrs["namespaces"],
+       namespace: attrs["namespace"],
+       pods: attrs["pods"],
+       pod: attrs["pod"],
+       containers: attrs["containers"],
+       container: attrs["container"]
      )}
   end
 
   @impl true
-  def handle_connect(ctx) do
-    {:ok, get_js_attrs(ctx), ctx}
-  end
-
-  @impl true
-  def to_attrs(ctx) do
-    ctx.assigns
-  end
-
-  @impl true
   def to_source(attrs) do
-    if all_fields_filled?(attrs, [:connection, :namespace, :pod, :container]) do
+    if all_fields_filled?(attrs, ["connection", "namespace", "pod", "container"]) do
       %{
-        connection: connection,
-        namespace: namespace,
-        pod: pod,
-        container: container,
-        connect_to: connect_to
+        "connection" => connection,
+        "namespace" => namespace,
+        "pod" => pod,
+        "container" => container,
+        "connect_to" => connect_to
       } = attrs
 
       connect_to_pod =
@@ -110,7 +100,7 @@ defmodule KinoK8s.TerminalCell do
     {:noreply,
      ctx
      |> assign(namespace: namespace)
-     |> set_pods(namespace)
+     |> set_pods()
      |> broadcast_update()}
   end
 
@@ -118,7 +108,7 @@ defmodule KinoK8s.TerminalCell do
     {:noreply,
      ctx
      |> assign(pod: pod)
-     |> set_containers(pod)
+     |> set_containers()
      |> broadcast_update()}
   end
 
@@ -126,7 +116,7 @@ defmodule KinoK8s.TerminalCell do
     {:noreply,
      ctx
      |> assign(container: container)
-     |> set_containers(container)
+     |> set_containers()
      |> broadcast_update()}
   end
 
@@ -157,52 +147,65 @@ defmodule KinoK8s.TerminalCell do
     ctx
   end
 
+  @impl true
+  def handle_connect(ctx) do
+    {:ok, get_js_attrs(ctx), ctx}
+  end
+
+  @impl true
+  def to_attrs(ctx), do: get_js_attrs(ctx)
+
   defp get_js_attrs(ctx) do
-    ctx.assigns
+    Map.new(ctx.assigns, fn {key, value} -> {Atom.to_string(key), value} end)
   end
 
   defp set_namespaces(ctx) when is_nil(ctx.assigns.connection) do
     ctx
     |> assign(namespaces: nil, namespace: nil)
-    |> set_pods(nil)
+    |> set_pods()
   end
 
   defp set_namespaces(ctx) do
     with {:ok, namespaces} <- K8sHelper.namespaces(conn(ctx)) do
-      namespace = List.first(namespaces)
+      namespace =
+        if ctx.assigns.namespace in namespaces,
+          do: ctx.assigns.namespace,
+          else: List.first(namespaces)
 
       ctx
       |> assign(namespaces: namespaces, namespace: namespace)
-      |> set_pods(namespace)
+      |> set_pods()
     else
       _ -> ctx
     end
   end
 
-  defp set_pods(ctx, nil) do
+  defp set_pods(ctx) when is_nil(ctx.assigns.namespace) do
     ctx
     |> assign(pods: nil, pod: nil)
-    |> set_containers(nil)
+    |> set_containers()
   end
 
-  defp set_pods(ctx, namespace) do
-    case K8sHelper.pods(conn(ctx), namespace) do
+  defp set_pods(ctx) do
+    case K8sHelper.pods(conn(ctx), ctx.assigns.namespace) do
       {:ok, pods} ->
         pod = List.first(pods)
 
         ctx
         |> assign(pods: pods, pod: pod)
-        |> set_containers(pod)
+        |> set_containers()
 
       _ ->
         ctx
     end
   end
 
-  defp set_containers(ctx, nil), do: assign(ctx, containers: nil, container: nil)
+  defp set_containers(ctx) when is_nil(ctx.assigns.pod),
+    do: assign(ctx, containers: nil, container: nil)
 
-  defp set_containers(ctx, pod) do
-    with {:ok, containers} <- K8sHelper.containers(conn(ctx), ctx.assigns.namespace, pod) do
+  defp set_containers(ctx) do
+    with {:ok, containers} <-
+           K8sHelper.containers(conn(ctx), ctx.assigns.namespace, ctx.assigns.pod) do
       container = List.first(containers)
 
       assign(ctx, containers: containers, container: container)

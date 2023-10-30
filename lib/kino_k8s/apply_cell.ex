@@ -25,16 +25,19 @@ defmodule KinoK8s.ApplyCell do
       assign(ctx,
         connections: [],
         connection: nil,
-        method: attrs[:method] || "apply",
-        methods: @available_methods,
         result_variable:
-          Kino.SmartCell.prefixed_var_name("applied_resource", attrs["result_variable"])
+          Kino.SmartCell.prefixed_var_name("applied_resource", attrs["result_variable"]),
+        methods: @available_methods,
+        method: attrs["method"] || "apply",
+        body: attrs["body"]
       )
 
-    {:ok, ctx, editor: [attribute: :body, language: "yaml", default_source: @default_body]}
+    {:ok, ctx, editor: [attribute: "body", language: "yaml", default_source: @default_body]}
   end
 
   @impl true
+  @spec handle_connect(atom() | %{:assigns => any(), optional(any()) => any()}) ::
+          {:ok, map(), atom() | %{:assigns => any(), optional(any()) => any()}}
   def handle_connect(ctx) do
     {:ok, get_js_attrs(ctx), ctx}
   end
@@ -54,7 +57,7 @@ defmodule KinoK8s.ApplyCell do
   @impl true
   def handle_event("update_connection", variable, ctx) do
     connection = Enum.find(ctx.assigns.connections, &(&1.variable == variable))
-    {:noreply, ctx |> assign(connection: connection) |> broadcast_update}
+    {:noreply, ctx |> assign(connection: connection) |> broadcast_update()}
   end
 
   def handle_event("update_result_variable", variable, ctx) do
@@ -89,22 +92,20 @@ defmodule KinoK8s.ApplyCell do
   end
 
   @impl true
-  def to_attrs(ctx) do
-    ctx.assigns
-  end
+  def to_attrs(ctx), do: get_js_attrs(ctx)
 
   defp get_js_attrs(ctx) do
-    ctx.assigns
+    Map.new(ctx.assigns, fn {key, value} -> {Atom.to_string(key), value} end)
   end
 
   @impl true
   def to_source(attrs) do
-    if all_fields_filled?(attrs, [:connection, :result_variable, :body, :method]) do
+    if all_fields_filled?(attrs, ["connection", "result_variable", "body", "method"]) do
       %{
-        connection: connection,
-        method: method,
-        result_variable: result_variable,
-        body: body
+        "connection" => connection,
+        "method" => method,
+        "result_variable" => result_variable,
+        "body" => body
       } = attrs
 
       method_expr =

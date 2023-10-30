@@ -13,10 +13,10 @@ defmodule KinoK8s.ConnectionCell do
   def init(attrs, ctx) do
     ctx =
       assign(ctx,
-        result_variable: Kino.SmartCell.prefixed_var_name("conn", attrs[:result_variable]),
-        source_type: attrs[:source_type] || @default_source_type,
-        source: attrs[:source] || @default_file,
-        opts: attrs[:opts] || %{"insecure_skip_tls_verify" => true},
+        result_variable: Kino.SmartCell.prefixed_var_name("conn", attrs["result_variable"]),
+        source_type: attrs["source_type"] || @default_source_type,
+        source: attrs["source"] || @default_file,
+        opts: attrs["opts"] || %{"insecure_skip_tls_verify" => true},
         # running_on_k8s: File.exists?("/var/run/secrets/kubernetes.io/serviceaccount"),
         mix_env: Mix.env()
       )
@@ -27,14 +27,19 @@ defmodule KinoK8s.ConnectionCell do
   @impl true
   def to_source(attrs) do
     required_keys =
-      case attrs.source_type do
-        "file" -> [:result_variable, :source_type, :source, :opts]
-        "env" -> [:result_variable, :source_type, :source, :opts]
-        "k8s" -> [:result_variable, :source_type, :opts]
+      case attrs["source_type"] do
+        "file" -> ["result_variable", "source_type", "source", "opts"]
+        "env" -> ["result_variable", "source_type", "source", "opts"]
+        "k8s" -> ["result_variable", "source_type", "opts"]
       end
 
     if all_fields_filled?(attrs, required_keys) do
-      %{result_variable: result_variable, source: source, source_type: source_type, opts: opts} =
+      %{
+        "result_variable" => result_variable,
+        "source" => source,
+        "source_type" => source_type,
+        "opts" => opts
+      } =
         attrs
 
       opts =
@@ -105,11 +110,11 @@ defmodule KinoK8s.ConnectionCell do
 
   @impl true
   def to_attrs(ctx) do
-    ctx.assigns
+    get_js_attrs(ctx)
   end
 
   defp get_js_attrs(ctx) do
-    ctx.assigns
+    Map.new(ctx.assigns, fn {key, value} -> {Atom.to_string(key), value} end)
   end
 
   defp broadcast_update(ctx) do
