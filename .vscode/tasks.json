@@ -12,7 +12,7 @@
     {
       "label": "Run Livebook",
       "type": "shell",
-      "command": "livebook server ./demo.livemd",
+      "command": "livebook server ./dev.livemd",
       "problemMatcher": []
     },
     {

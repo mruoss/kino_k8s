@@ -1,4 +1,6 @@
 defmodule KinoK8s.K8sHelper do
+  @moduledoc false
+
   def namespaces(conn) do
     with {:ok, ns_list} <-
            K8s.Client.list("v1", "namespace")

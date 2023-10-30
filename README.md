@@ -1,23 +1,32 @@
 # KinoK8s
 
-**TODO: Add description**
+A Livebook Kino for learning to use the k8s Elixir library.
+
+[![Module Version](https://img.shields.io/hexpm/v/kino_k8s.svg)](https://hex.pm/packages/kino_k8s)
+[![Last Updated](https://img.shields.io/github/last-commit/mruoss/kino_k8s.svg)](https://github.com/mruoss/kino_k8s/commits/main)
+
+[![Hex Docs](https://img.shields.io/badge/hex-docs-lightgreen.svg)](https://hexdocs.pm/kino_k8s/)
+[![Total Download](https://img.shields.io/hexpm/dt/kino_k8s.svg)](https://hex.pm/packages/kino_k8s)
+[![License](https://img.shields.io/hexpm/l/kino_k8s.svg)](https://github.com/mruoss/kino_k8s/blob/main/LICENSE)
 
 ## Installation
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `kino_k8s` to your list of dependencies in `mix.exs`:
-
 ```elixir
-def deps do
-  [
-    {:kino_k8s, "~> 0.1.0"}
-  ]
-end
+Mix.install([{:kino_k8s, "~> 1.0"}])
 ```
 
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at <https://hexdocs.pm/kino_k8s>.
+## Smart Cells
+
+`kino_k8s` brings the following Smart Cells to your Livebook:
+
+- **Cluster Connection** - Connect to a Kubernetes Cluster
+- **Get / List / Watch Resources**
+- **Create / Update / Apply Resource** - Modify resources in your cluster
+- **Connect to Pod (Exec/Logs)** - Renders a terminal using xterm.js (Formerly `kino_k8s_term`).
+
+The smart cells require a connection to a Kubernetes Cluster in form of a
+`%K8s.Conn{}` object. To add such a connection to your Livebook, you can add
+the `Cluster Connection` smart cell before adding any other smart cells.
 
 ## Development
 
@@ -27,15 +36,15 @@ be found at <https://hexdocs.pm/kino_k8s>.
 npm start
 ```
 
-### Build for Production
-
-```bash
-npm run build
-```
-
 ### Install and run livebook
 
 ```bash
 mix escript.install hex livebook
-MIX_ENV=dev livebook server ./demo.livemd
+MIX_ENV=dev livebook server ./dev.livemd
+```
+
+### Build Assets
+
+```bash
+npm run build
 ```

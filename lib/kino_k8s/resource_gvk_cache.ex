@@ -1,10 +1,5 @@
 defmodule KinoK8s.ResourceGVKCache do
-  @moduledoc """
-  This GenServer caches resources (Group-Version-Kind) in a cluster by
-  repeatedly polling the API for endpoints. The module handle cache multiple
-  clusters. To initialize the cache for a cluster, call `add_conn/1` and pass
-  the `%K8s.Conn{}` for the desired cluster.
-  """
+  @moduledoc false
 
   use GenServer
 

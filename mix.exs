@@ -1,13 +1,24 @@
 defmodule KinoK8s.MixProject do
   use Mix.Project
 
+  @source_url "https://github.com/mruoss/kino_k8s"
+  @version "1.0.0"
+
   def project do
     [
       app: :kino_k8s,
-      version: "1.0.0",
+      description: "A Livebook Kino for learning to use the k8s Elixir library.",
+      version: @version,
       elixir: "~> 1.15",
       start_permanent: Mix.env() == :prod,
-      deps: deps()
+      deps: deps(),
+      package: package(),
+      docs: [
+        main: "readme",
+        extras: ["README.md", "CHANGELOG.md"],
+        source_ref: "v#{@version}",
+        source_url: @source_url
+      ]
     ]
   end
 
@@ -22,9 +33,22 @@ defmodule KinoK8s.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
+      {:ex_doc, ">= 0.0.0", only: :dev, runtime: false},
       {:k8s, "~> 2.0"},
-      {:ymlr, "~> 4.0"},
-      {:kino, "~> 0.11.0"}
+      {:kino, "~> 0.11.0"},
+      {:ymlr, "~> 4.0"}
+    ]
+  end
+
+  defp package do
+    [
+      name: :kino_k8s,
+      maintainers: ["Michael Ruoss"],
+      licenses: ["Apache-2.0"],
+      links: %{
+        "GitHub" => @source_url
+      },
+      files: ["lib", "mix.exs", "README*", "LICENSE*", "CHANGELOG.md"]
     ]
   end
 end

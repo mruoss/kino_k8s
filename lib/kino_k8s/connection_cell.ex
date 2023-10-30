@@ -1,4 +1,6 @@
 defmodule KinoK8s.ConnectionCell do
+  @moduledoc false
+
   use Kino.JS, assets_path: "lib/assets/connection_cell"
   use Kino.JS.Live
   use Kino.SmartCell, name: "K8s - Cluster Connection"

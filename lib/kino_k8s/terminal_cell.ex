@@ -1,4 +1,6 @@
 defmodule KinoK8s.TerminalCell do
+  @moduledoc false
+
   use Kino.JS, assets_path: "lib/assets/terminal_cell"
   use Kino.JS.Live
   use Kino.SmartCell, name: "K8s - Connect to Pod (Exec/Logs)"
@@ -7,6 +9,8 @@ defmodule KinoK8s.TerminalCell do
   alias KinoK8s.K8sHelper
 
   @impl true
+  @spec init(nil | maybe_improper_list() | map(), Kino.JS.Live.Context.t()) ::
+          {:ok, Kino.JS.Live.Context.t()}
   def init(attrs, ctx) do
     {:ok,
      ctx

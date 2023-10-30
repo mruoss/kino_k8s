@@ -8,7 +8,8 @@
     "es:build": "esbuild assets/*/main.tsx --external:react --external:react-dom/client --entry-names=[dir]/[name] --outbase=assets --outdir=lib/assets --target=es2020 --format=esm --bundle",
     "es:watch": "npm run es:build -- --sourcemap=inline --watch",
     "start": "npm-run-all --parallel 'tailwind:build:* -- --watch' es:watch",
-    "build": "npm-run-all --parallel tailwind es:build"
+    "build": "npm run clean && npm-run-all --parallel tailwind es:build",
+    "clean": "rm -r lib/assets"
   },
   "devDependencies": {
     "@types/react": "^18.2.28",
