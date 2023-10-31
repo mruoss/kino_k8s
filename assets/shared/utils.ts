@@ -21,14 +21,19 @@ export const loadReact = async (
   attrs: Attributes,
 ): Promise<void> => {
   if (attrs.mix_env == 'dev') {
-    await ctx.importJS('https://unpkg.com/react@18/umd/react.development.js')
     await ctx.importJS(
-      'https://unpkg.com/react-dom@18.2.0/umd/react-dom.development.js',
+      'https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.development.js',
+    )
+    await ctx.importJS(
+      // renovate: datasource=
+      'https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.development.min.js',
     )
   } else {
-    await ctx.importJS('https://unpkg.com/react@18/umd/react.production.min.js')
     await ctx.importJS(
-      'https://unpkg.com/react-dom@18.2.0/umd/react-dom.production.min.js',
+      'https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.js',
+    )
+    await ctx.importJS(
+      'https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js',
     )
   }
 }
