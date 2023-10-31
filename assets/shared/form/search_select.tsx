@@ -1,5 +1,4 @@
 import classNames from 'classnames'
-import { ChangeEvent } from 'react'
 import { debounce } from '../utils'
 
 type SearchInputProps = {
@@ -63,7 +62,7 @@ const SearchInput: React.FC<SearchInputProps> = ({
           name={name}
           autoComplete="off"
           placeholder={placeholder}
-          onInput={(e: ChangeEvent<HTMLInputElement>) => {
+          onInput={(e: React.ChangeEvent<HTMLInputElement>) => {
             setLocalSearchTerm(e.target.value)
             performSearch(e.target.value)
           }}

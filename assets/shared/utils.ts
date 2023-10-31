@@ -18,7 +18,7 @@ export const debounce = <T extends (...args: any[]) => ReturnType<T>>(
 
 export const loadReact = async (
   ctx: KinoContext,
-  attrs: Attributes,
+  attrs: Pick<Attributes, 'mix_env'>,
 ): Promise<void> => {
   if (attrs.mix_env == 'dev') {
     await ctx.importJS(

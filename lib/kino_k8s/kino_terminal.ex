@@ -2,7 +2,7 @@ defmodule KinoK8s.KinoTerminal do
   @moduledoc """
   A Livebook Kino providing a Terminal to a Kubernetes Pod.
   """
-  use Kino.JS
+  use Kino.JS, assets_path: "lib/assets/kino_terminal"
   use Kino.JS.Live
 
   @doc """
@@ -21,7 +21,7 @@ defmodule KinoK8s.KinoTerminal do
   @impl true
   def init(attrs, ctx) do
     send_to_process = attrs.connect.(self())
-    {:ok, assign(ctx, buffer: [], send_to_process: send_to_process)}
+    {:ok, assign(ctx, mix_env: Mix.env(), buffer: [], send_to_process: send_to_process)}
   end
 
   @impl true
@@ -60,27 +60,5 @@ defmodule KinoK8s.KinoTerminal do
   def handle_event("key", key, ctx) do
     ctx.assigns.send_to_process.({:stdin, key})
     {:noreply, ctx}
-  end
-
-  asset "main.js" do
-    """
-    export async function init(ctx, attrs) {
-      await ctx.importCSS("https://cdn.jsdelivr.net/npm/xterm@5.0.0/css/xterm.css");
-      await ctx.importJS("https://cdn.jsdelivr.net/npm/xterm@5.0.0/lib/xterm.min.js");
-
-      ctx.root.innerHTML = `
-        <div id="k8s-terminal">
-          <div class="k8s-xtermjs-container"></div>
-        </div>
-      `;
-
-      const k8s_xterm = new Terminal({convertEol: true});
-      k8s_xterm.onKey((key) => ctx.pushEvent("key", key.key));
-      k8s_xterm.open(ctx.root.querySelector(".k8s-xtermjs-container"));
-      ctx.handleEvent("print-terminal", (data) => k8s_xterm.write(data));
-      ctx.handleEvent("dispose-terminal", () => k8s_xterm.dispose());
-      k8s_xterm.write(attrs.buffer);
-    }
-    """
   end
 end
