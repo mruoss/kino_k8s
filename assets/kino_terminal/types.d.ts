@@ -1,5 +1,5 @@
 import { Attributes } from '../shared/types'
 
-export interface ApplyCellAttrs extends Pick<Attributes, 'mix_env'> {
-  buffer: string[]
+export interface KinoTerminalAttrs extends Pick<Attributes, 'mix_env'> {
+  buffer: string | Uint8Array
 }
