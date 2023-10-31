@@ -25,7 +25,6 @@ export const loadReact = async (
       'https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.development.js',
     )
     await ctx.importJS(
-      // renovate: datasource=
       'https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.development.min.js',
     )
   } else {

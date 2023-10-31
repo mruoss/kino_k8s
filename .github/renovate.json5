@@ -9,4 +9,7 @@
     automerge: false,
   },
   addLabels: ['renovate-update'],
+  cdnurl: {
+    fileMatch: ['^assets/.*\\.tsx?$'],
+  },
 }
