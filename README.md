@@ -17,7 +17,7 @@ Mix.install([{:kino_k8s, "~> 1.0"}])
 
 ## Smart Cells
 
-`kino_k8s` brings the following Smart Cells to your Livebook:
+`kino_k8s` brings the following Smart Cells to your [Livebook](https://livebook.dev):
 
 - **Cluster Connection** - Connect to a Kubernetes Cluster
 - **Get / List / Watch Resources**
