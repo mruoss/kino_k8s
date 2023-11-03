@@ -33,6 +33,7 @@ the `Cluster Connection` smart cell before adding any other smart cells.
 ### Build and Watch Javascript and CSS
 
 ```bash
+npm install
 npm start
 ```
 
