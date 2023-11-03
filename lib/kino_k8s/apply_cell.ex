@@ -127,6 +127,8 @@ defmodule KinoK8s.ApplyCell do
           |> K8s.Client.run()
 
         Kino.Markdown.new("""
+        #### Applied Resource:
+
         ```yaml
         #{Ymlr.document!(unquote(quoted_var(result_variable)))}
         ```
