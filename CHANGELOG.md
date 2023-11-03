@@ -12,6 +12,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 <!--------------------- Don't add new entries after this line --------------------->
 
+## [1.0.2] - 2023-11-03
+
+### Fixed
+
+- Use correct CDN paths to production builds
+- Use build time `DEBUG` variable in JS instead of `Mix.env()`
+
 ## [1.0.1] - 2023-10-31
 
 ### Changed
