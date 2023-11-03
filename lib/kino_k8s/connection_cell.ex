@@ -57,7 +57,10 @@ defmodule KinoK8s.ConnectionCell do
         end
 
       Kino.SmartCell.quoted_to_string(
-        quote do: {:ok, unquote(quoted_var(result_variable))} = unquote(expr)
+        quote do
+          {:ok, unquote(quoted_var(result_variable))} = unquote(expr)
+          unquote(quoted_var(result_variable))
+        end
       )
     else
       ""
@@ -67,7 +70,7 @@ defmodule KinoK8s.ConnectionCell do
   @impl true
   def scan_eval_result(_server, nil), do: :ok
 
-  def scan_eval_result(_server, {:ok, {:ok, conn}}) do
+  def scan_eval_result(_server, {:ok, conn}) do
     ResourceGVKCache.init_cache(conn)
   end
 

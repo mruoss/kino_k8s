@@ -126,7 +126,11 @@ defmodule KinoK8s.ApplyCell do
           |> K8s.Client.put_conn(unquote(quoted_var(connection.variable)))
           |> K8s.Client.run()
 
-        unquote(quoted_var(result_variable)) |> Ymlr.document!() |> IO.puts()
+        Kino.Markdown.new("""
+        ```yaml
+        #{Ymlr.document!(unquote(quoted_var(result_variable)))}
+        ```
+        """)
       end
       |> Kino.SmartCell.quoted_to_string()
     else
