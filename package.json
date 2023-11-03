@@ -5,8 +5,8 @@
     "tailwind:build:get_cell": "tailwindcss --content './assets/{get_cell,shared}/**/*.{ts,tsx}'  -i assets/get_cell/main.css -o ./lib/assets/get_cell/main.css",
     "tailwind:build:terminal_cell": "tailwindcss --content './assets/{terminal_cell,shared}/**/*.{ts,tsx}'  -i assets/terminal_cell/main.css -o ./lib/assets/terminal_cell/main.css",
     "tailwind": "npm-run-all --parallel tailwind:build:*",
-    "es:build": "esbuild assets/*/main.ts* --minify --external:react --external:react-dom/client --external:xterm --entry-names=[dir]/[name] --outbase=assets --outdir=lib/assets --target=es2020 --format=esm --bundle",
-    "es:watch": "npm run es:build -- --sourcemap=inline --watch",
+    "es:build": "esbuild assets/*/main.ts*  --define:DEBUG=false --minify --external:react --external:react-dom/client --external:xterm --entry-names=[dir]/[name] --outbase=assets --outdir=lib/assets --target=es2020 --format=esm --bundle",
+    "es:watch": "npm run es:build -- --sourcemap=inline --watch --define:DEBUG=true",
     "start": "npm-run-all --parallel 'tailwind:build:* -- --watch' es:watch",
     "build": "npm run clean && npm-run-all --parallel tailwind es:build",
     "clean": "rm -r lib/assets"

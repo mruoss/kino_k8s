@@ -1,8 +1,6 @@
 import xterm from 'xterm'
 
-import { Attributes } from '../shared/types'
-
-export interface KinoTerminalAttrs extends Pick<Attributes, 'mix_env'> {
+export interface KinoTerminalAttrs {
   buffer: string | Uint8Array
 }
 

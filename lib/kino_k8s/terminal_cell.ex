@@ -15,7 +15,6 @@ defmodule KinoK8s.TerminalCell do
     {:ok,
      ctx
      |> assign(
-       mix_env: Mix.env(),
        connections: [],
        connection: nil,
        connect_tos: ["exec", "logs"],

@@ -21,7 +21,7 @@ defmodule KinoK8s.KinoTerminal do
   @impl true
   def init(attrs, ctx) do
     send_to_process = attrs.connect.(self())
-    {:ok, assign(ctx, mix_env: Mix.env(), buffer: [], send_to_process: send_to_process)}
+    {:ok, assign(ctx, buffer: [], send_to_process: send_to_process)}
   end
 
   @impl true

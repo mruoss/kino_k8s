@@ -41,7 +41,7 @@ npm start
 
 ```bash
 mix escript.install hex livebook
-MIX_ENV=dev livebook server ./dev.livemd
+livebook server ./dev.livemd
 ```
 
 ### Build Assets

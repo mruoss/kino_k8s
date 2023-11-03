@@ -1,5 +1,4 @@
 import { KinoContext } from '../kino'
-import { Attributes } from './types'
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export const debounce = <T extends (...args: any[]) => ReturnType<T>>(
@@ -16,11 +15,8 @@ export const debounce = <T extends (...args: any[]) => ReturnType<T>>(
   }
 }
 
-export const loadReact = async (
-  ctx: KinoContext,
-  attrs: Pick<Attributes, 'mix_env'>,
-): Promise<void> => {
-  if (attrs.mix_env == 'dev') {
+export const loadReact = async (ctx: KinoContext): Promise<void> => {
+  if (DEBUG) {
     await ctx.importJS(
       'https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.development.js',
     )

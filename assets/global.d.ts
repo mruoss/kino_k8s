@@ -20,6 +20,7 @@ export interface Root {
 }
 
 declare global {
+  const DEBUG: boolean
   const Terminal: typeof TerminalType
   const React: typeof React
   const ReactDOM: {

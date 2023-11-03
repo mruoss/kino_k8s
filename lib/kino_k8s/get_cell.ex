@@ -16,7 +16,6 @@ defmodule KinoK8s.GetCell do
   def init(attrs, ctx) do
     ctx =
       assign(ctx,
-        mix_env: Mix.env(),
         connections: [],
         connection: nil,
         result_variable: Kino.SmartCell.prefixed_var_name("result", attrs["result_variable"]),
