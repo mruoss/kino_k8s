@@ -25,11 +25,11 @@ export const loadReact = async (
       'https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.development.js',
     )
     await ctx.importJS(
-      'https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.development.min.js',
+      'https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.development.js',
     )
   } else {
     await ctx.importJS(
-      'https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.js',
+      'https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js',
     )
     await ctx.importJS(
       'https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js',
