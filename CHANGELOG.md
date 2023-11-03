@@ -12,6 +12,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 <!--------------------- Don't add new entries after this line --------------------->
 
+## [1.1.0] - 2023-11-03
+
+### Added
+
+- Render results as Kinos [#17](https://github.com/mruoss/kino_k8s/issues/17):
+  - `K8s.Conn` is rendered as `Kino.Tree`
+  - Resources are rendered as `Kino.Markdown`
+  - Resource lists are rendered as `Kino.Tree`
+
 ## [1.0.2] - 2023-11-03
 
 ### Fixed
