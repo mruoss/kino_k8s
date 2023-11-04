@@ -8,14 +8,15 @@ defmodule KinoK8s.ApplyCell do
   alias KinoK8s.ResourceGVKCache
 
   @default_body """
-  kind: ConfigMap
-  apiVersion: v1
-  metadata:
-    name: kino-k8s-cm
-    namespace: default
-  data:
-    key: default
-  """
+                kind: ConfigMap
+                apiVersion: v1
+                metadata:
+                  name: kino-k8s-cm
+                  namespace: default
+                data:
+                  key: default
+                """
+                |> String.trim_trailing("\n")
 
   @available_methods ["apply", "create", "update"]
 
