@@ -1,5 +1,4 @@
-[env]
-ERL_AFLAGS = "-kernel shell_history enabled"
+env_file = '.env'
 
 [tools]
 erlang = "26.1.2"

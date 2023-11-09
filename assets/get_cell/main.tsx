@@ -8,7 +8,7 @@ export const init = async (
   ctx: KinoContext,
   attrs: ListCellAttrs,
 ): Promise<void> => {
-  await loadReact(ctx, attrs)
+  await loadReact(ctx)
 
   ctx.root.innerHTML = 'loading...'
 
