@@ -1,0 +1,58 @@
+name: Playwright Tests
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+env:
+  KUBECONFIG: /home/runner/.kube/config
+jobs:
+  test:
+    timeout-minutes: 60
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version-file: .tool-versions
+
+      - name: Setup elixir
+        id: beam
+        uses: erlef/setup-beam@v1
+        with:
+          version-file: .tool-versions
+          version-type: strict
+          install-rebar: true
+          install-hex: true
+
+      - name: install livebook
+        run: mix escript.install --force hex livebook
+
+      - uses: engineerd/setup-kind@v0.5.0
+        id: kind
+        with:
+          version: v0.20.0
+          name: kino-k8s
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps
+
+      - name: Run livebook
+        env:
+          LIVEBOOK_TOKEN_ENABLED: 0
+        run: livebook server &
+
+      - name: Run Playwright tests
+        env:
+          KUBECONTEXT: ''
+        run: KUBECONFIG="${KUBECONFIG}" npx playwright test
+
+      - uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 30

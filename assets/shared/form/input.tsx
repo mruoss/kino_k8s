@@ -4,6 +4,7 @@ type InputProps = {
   name: string
   label: string
   defaultValue: string
+  testId?: string
   onChange: (value: string) => void
   orientation?: 'horiz' | 'vert'
 }
@@ -11,6 +12,7 @@ const Input: React.FC<InputProps> = ({
   name,
   label,
   defaultValue,
+  testId,
   onChange,
   orientation = 'vert',
 }) => {
@@ -34,6 +36,7 @@ const Input: React.FC<InputProps> = ({
       </label>
       <input
         type="text"
+        data-testid={testId ?? name}
         value={defaultValue}
         name={name}
         onChange={(e) => onChange(e.target.value)}

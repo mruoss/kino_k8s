@@ -29,3 +29,6 @@ kino_k8s-*.tar
 *node_modules/*
 
 *.livemd_files
+/test-results/
+/playwright-report/
+/blob-report/
