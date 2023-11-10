@@ -6,10 +6,17 @@
   branchConcurrentLimit: 10,
   lockFileMaintenance: {
     enabled: true,
-    automerge: false,
+    automerge: true,
   },
   addLabels: ['renovate-update'],
   cdnurl: {
     fileMatch: ['^assets/.*\\.tsx?$'],
   },
+  packageRules: [
+    {
+      matchUpdateTypes: ['minor', 'patch'],
+      matchCurrentVersion: '!/^0/',
+      automerge: true,
+    },
+  ],
 }
