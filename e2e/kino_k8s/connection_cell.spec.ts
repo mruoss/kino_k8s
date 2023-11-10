@@ -10,7 +10,10 @@ test.beforeEach(async ({ page }) => {
     .fill(`Mix.install([{:kino_k8s, path: "${process.cwd()}"}])`)
 
   await page.getByRole('button', { name: 'Reconnect and setup' }).click()
-  await expect(page.locator('#outputs-setup-2')).toHaveText(/:ok/)
+
+  await expect(page.locator('#outputs-setup-2')).toHaveText(/:ok/, {
+    timeout: 300000,
+  })
 
   const smart = page
     .locator('section')

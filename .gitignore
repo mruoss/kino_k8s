@@ -32,4 +32,3 @@ kino_k8s-*.tar
 /test-results/
 /playwright-report/
 /blob-report/
-/playwright/.cache/
