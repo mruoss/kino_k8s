@@ -275,21 +275,33 @@ defmodule KinoK8s.GetCell do
   end
 
   defp set_namespaces(ctx) do
-    with {:ok, namespaces} <- K8sHelper.namespaces(conn(ctx)) do
-      namespaces =
-        if ctx.assigns.request_type == "get", do: namespaces, else: ["__ALL__" | namespaces]
+    conn = conn(ctx)
 
-      namespace =
-        if ctx.assigns.namespace in namespaces,
-          do: ctx.assigns.namespace,
-          else: List.first(namespaces)
+    namespaces =
+      case K8sHelper.namespaces(conn) do
+        {:ok, namespaces} ->
+          if ctx.assigns.request_type == "get", do: namespaces, else: ["__ALL__" | namespaces]
 
-      ctx
-      |> assign(namespaces: namespaces, namespace: namespace)
-      |> set_resources()
-    else
-      _ -> ctx
-    end
+        _ ->
+          nil
+      end
+
+    namespace =
+      case K8sHelper.service_account(conn) do
+        %{"namespace" => namespace} ->
+          namespace
+
+        _ ->
+          namespaces = List.wrap(namespaces)
+
+          if ctx.assigns.namespace in namespaces,
+            do: ctx.assigns.namespace,
+            else: List.first(namespaces)
+      end
+
+    ctx
+    |> assign(namespaces: namespaces, namespace: namespace)
+    |> set_resources()
   end
 
   defp set_resources(ctx)
