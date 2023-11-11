@@ -29,4 +29,19 @@ defmodule KinoK8s.K8sHelper do
       {:ok, get_in(pod, ["spec", "containers", Access.all(), "name"])}
     end
   end
+
+  def service_account(conn) do
+    case conn.auth do
+      %{token: token} ->
+        token
+        |> String.split(".")
+        |> Enum.at(1)
+        |> Base.decode64!(padding: false)
+        |> Jason.decode!()
+        |> Map.get("kubernetes.io")
+
+      _ ->
+        nil
+    end
+  end
 end
