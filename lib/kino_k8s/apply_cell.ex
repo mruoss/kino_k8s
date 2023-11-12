@@ -5,7 +5,7 @@ defmodule KinoK8s.ApplyCell do
   use Kino.JS.Live
   use Kino.SmartCell, name: "K8s - Create / Update / Apply Resource"
 
-  alias KinoK8s.ResourceGVKCache
+  alias KinoK8s.SmartCellHelper
 
   @default_body """
                 kind: ConfigMap
@@ -79,15 +79,7 @@ defmodule KinoK8s.ApplyCell do
   end
 
   @impl true
-  def scan_binding(pid, binding, _env) do
-    connections =
-      for {key, value} <- binding,
-          is_atom(key),
-          is_struct(value, K8s.Conn),
-          do: %{variable: Atom.to_string(key), conn_hash: ResourceGVKCache.hash(value)}
-
-    send(pid, {:connections, connections})
-  end
+  def scan_binding(pid, binding, _env), do: SmartCellHelper.scan_connections(pid, binding)
 
   defp broadcast_update(ctx) do
     broadcast_event(ctx, "update", get_js_attrs(ctx))
@@ -149,6 +141,6 @@ defmodule KinoK8s.ApplyCell do
   defp quoted_var(string), do: {String.to_atom(string), [], nil}
 
   defp quoted_body(body) do
-    {:sigil_y, [delimiter: "\"\"\""], [{:<<>>, [indentation: 0], [body]}, []]}
+    {:sigil_y, [delimiter: "\"\"\""], [{:<<>>, [indentation: 0], [body <> "\n"]}, []]}
   end
 end

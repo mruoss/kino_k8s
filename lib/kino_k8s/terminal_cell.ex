@@ -5,6 +5,7 @@ defmodule KinoK8s.TerminalCell do
   use Kino.JS.Live
   use Kino.SmartCell, name: "K8s - Connect to Pod (Exec/Logs)"
 
+  alias KinoK8s.SmartCellHelper
   alias KinoK8s.ResourceGVKCache
   alias KinoK8s.K8sHelper
 
@@ -135,15 +136,7 @@ defmodule KinoK8s.TerminalCell do
   end
 
   @impl true
-  def scan_binding(pid, binding, _env) do
-    connections =
-      for {key, value} <- binding,
-          is_atom(key),
-          is_struct(value, K8s.Conn),
-          do: %{variable: Atom.to_string(key), conn_hash: ResourceGVKCache.hash(value)}
-
-    send(pid, {:connections, connections})
-  end
+  def scan_binding(pid, binding, _env), do: SmartCellHelper.scan_connections(pid, binding)
 
   defp broadcast_update(ctx) do
     broadcast_event(ctx, "update", get_js_attrs(ctx))
@@ -169,18 +162,9 @@ defmodule KinoK8s.TerminalCell do
   end
 
   defp set_namespaces(ctx) do
-    with {:ok, namespaces} <- K8sHelper.namespaces(conn(ctx)) do
-      namespace =
-        if ctx.assigns.namespace in namespaces,
-          do: ctx.assigns.namespace,
-          else: List.first(namespaces)
-
-      ctx
-      |> assign(namespaces: namespaces, namespace: namespace)
-      |> set_pods()
-    else
-      _ -> ctx
-    end
+    ctx
+    |> assign(SmartCellHelper.get_namespaces(ctx))
+    |> set_pods()
   end
 
   defp set_pods(ctx) when is_nil(ctx.assigns.namespace) do
