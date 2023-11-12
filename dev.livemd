@@ -1,8 +1,8 @@
-# Kino_K8s Demo
+# Kino_K8s Development
 
 ```elixir
 # Mix.install([{:kino_k8s, github: "mruoss/kino_k8s"}])
-Mix.install([{:kino_k8s, path: "~/src/community/kino_k8s"}], force: true)
+Mix.install([{:kino_k8s, path: "~/src/community/kino_k8s"}])
 ```
 
 ## Section
@@ -19,44 +19,50 @@ Mix.install([{:kino_k8s, path: "~/src/community/kino_k8s"}], force: true)
 conn
 ```
 
-<!-- livebook:{"attrs":{"connect_to":"exec","connect_tos":["exec","logs"],"connection":{"conn_hash":99636626,"variable":"conn"},"connections":[{"conn_hash":99636626,"variable":"conn"}],"container":null,"containers":null,"namespace":"default","namespaces":["default","kube-node-lease","kube-public","kube-system","local-path-storage"],"pod":null,"pods":[]},"chunks":null,"kind":"Elixir.KinoK8s.TerminalCell","livebook_object":"smart_cell"} -->
-
 ```elixir
-
-```
-
-<!-- livebook:{"attrs":{"connection":{"conn_hash":99636626,"variable":"conn"},"connections":[{"conn_hash":99636626,"variable":"conn"}],"gvk":{"api_version":"v1","index":"v1configmaps","kind":"ConfigMap","name":"configmaps","namespaced":true},"namespace":"default","namespaces":["__ALL__","default","kube-node-lease","kube-public","kube-system","local-path-storage"],"request_type":"watch","request_types":["get","list","watch"],"resource":null,"resources":null,"result_type":"stream","result_types":{"get":null,"list":["list","stream"],"watch":["stream"]},"result_variable":"result"},"chunks":null,"kind":"Elixir.KinoK8s.GetCell","livebook_object":"smart_cell"} -->
-
-```elixir
-{:ok, result} =
-  K8s.Client.watch("v1", "configmaps", namespace: "default")
-  |> K8s.Client.put_conn(conn)
-  |> K8s.Client.stream()
-
-Kino.Tree.new(result)
-```
-
-<!-- livebook:{"attrs":{"body":"kind: ConfigMap\napiVersion: v1\nmetadata:\n  name: kino-k8s-cm\n  namespace: default\ndata:\n  key: default\n","connection":{"conn_hash":99636626,"variable":"conn"},"connections":[{"conn_hash":99636626,"variable":"conn"}],"method":"create","methods":["apply","create","update"],"result_variable":"applied_resource"},"chunks":null,"kind":"Elixir.KinoK8s.ApplyCell","livebook_object":"smart_cell"} -->
-
-````elixir
-import YamlElixir.Sigil
-
-{:ok, applied_resource} =
-  ~y"""
-  kind: ConfigMap
-  apiVersion: v1
-  metadata:
-    name: kino-k8s-cm
-    namespace: default
-  data:
-    key: default
-  """
-  |> K8s.Client.create()
+{:ok, sa_token} =
+  K8s.Client.get("v1", "secrets", name: "ns-admin-token", namespace: "kino-k8s")
   |> K8s.Client.put_conn(conn)
   |> K8s.Client.run()
 
-Kino.Markdown.new("```yaml
-#{Ymlr.document!(applied_resource)}
+{:ok, ca_cert} = K8s.Conn.PKI.cert_from_base64(sa_token["data"]["ca.crt"])
+
+admin_conn =
+  struct!(conn,
+    ca_cert: ca_cert,
+    auth: %K8s.Conn.Auth.Token{token: Base.decode64!(sa_token["data"]["token"])},
+    namespace: Base.decode64!(sa_token["data"]["namespace"])
+  )
 ```
-")
-````
+
+```elixir
+{:ok, cluster_sa_token} =
+  K8s.Client.get("v1", "secrets", name: "cluster-admin-token", namespace: "kino-k8s")
+  |> K8s.Client.put_conn(conn)
+  |> K8s.Client.run()
+
+{:ok, ca_cert} = K8s.Conn.PKI.cert_from_base64(cluster_sa_token["data"]["ca.crt"])
+
+cluster_admin_conn =
+  struct!(conn,
+    ca_cert: ca_cert,
+    auth: %K8s.Conn.Auth.Token{token: Base.decode64!(cluster_sa_token["data"]["token"])},
+    namespace: Base.decode64!(cluster_sa_token["data"]["namespace"])
+  )
+```
+
+<!-- livebook:{"attrs":{"connection":{"conn_hash":100330371,"variable":"conn"},"connections":[{"conn_hash":100330371,"variable":"conn"}],"gvk":null,"namespace":null,"namespaces":null,"request_type":"list","request_types":["get","list","watch"],"resource":null,"resources":null,"result_type":"list","result_types":{"get":null,"list":["list","stream"],"watch":["stream"]},"result_variable":"stream"},"chunks":null,"kind":"Elixir.KinoK8s.GetCell","livebook_object":"smart_cell"} -->
+
+```elixir
+
+```
+
+<!-- livebook:{"attrs":{"connect_to":"logs","connect_tos":["exec","logs"],"connection":{"conn_hash":21208925,"variable":"admin_conn"},"connections":[{"conn_hash":21208925,"variable":"admin_conn"},{"conn_hash":100330371,"variable":"conn"},{"conn_hash":97020151,"variable":"cluster_admin_conn"}],"container":null,"containers":null,"namespace":"kino-k8s","namespaces":["kino-k8s"],"pod":null,"pods":[]},"chunks":null,"kind":"Elixir.KinoK8s.TerminalCell","livebook_object":"smart_cell"} -->
+
+```elixir
+
+```
+
+```elixir
+
+```

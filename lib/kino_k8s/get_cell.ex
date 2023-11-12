@@ -5,6 +5,7 @@ defmodule KinoK8s.GetCell do
   use Kino.JS.Live
   use Kino.SmartCell, name: "K8s - Get / List / Watch Resources"
 
+  alias KinoK8s.SmartCellHelper
   alias KinoK8s.ResourceGVKCache
   alias KinoK8s.K8sHelper
 
@@ -22,7 +23,9 @@ defmodule KinoK8s.GetCell do
         request_types: @request_types,
         request_type: attrs["request_type"] || @default_request_type,
         result_types: @result_types,
-        result_type: nil,
+        result_type:
+          attrs["result_type"] ||
+            @result_types[attrs["request_types"]] |> List.wrap() |> List.first(),
         gvk: attrs["gvk"],
         namespaces: attrs["namespaces"],
         namespace: attrs["namespace"],
@@ -127,15 +130,7 @@ defmodule KinoK8s.GetCell do
   end
 
   @impl true
-  def scan_binding(pid, binding, _env) do
-    connections =
-      for {key, value} <- binding,
-          is_atom(key),
-          is_struct(value, K8s.Conn),
-          do: %{variable: Atom.to_string(key), conn_hash: ResourceGVKCache.hash(value)}
-
-    send(pid, {:connections, connections})
-  end
+  def scan_binding(pid, binding, _env), do: SmartCellHelper.scan_connections(pid, binding)
 
   defp set_gvk(ctx, _) when is_nil(ctx.assigns.connection) do
     ctx
@@ -197,6 +192,8 @@ defmodule KinoK8s.GetCell do
   end
 
   def to_source(attrs) do
+    dbg(attrs)
+
     if all_fields_filled?(attrs, [
          "connection",
          "result_variable",
@@ -263,44 +260,21 @@ defmodule KinoK8s.GetCell do
     end
   end
 
-  defp set_namespaces(ctx) when is_nil(ctx.assigns.gvk) do
+  defp set_namespaces(%{:assigns => %{:gvk => nil}} = ctx) do
     ctx
     |> assign(namespaces: nil, namespace: nil)
     |> set_resources()
   end
 
   defp set_namespaces(%{:assigns => %{:gvk => %{"namespaced" => false}}} = ctx) do
-    assign(ctx, namespaces: nil, namespace: nil)
+    ctx
+    |> assign(namespaces: nil, namespace: nil)
     |> set_resources()
   end
 
   defp set_namespaces(ctx) do
-    conn = conn(ctx)
-
-    namespaces =
-      case K8sHelper.namespaces(conn) do
-        {:ok, namespaces} ->
-          if ctx.assigns.request_type == "get", do: namespaces, else: ["__ALL__" | namespaces]
-
-        _ ->
-          nil
-      end
-
-    namespace =
-      case K8sHelper.service_account(conn) do
-        %{"namespace" => namespace} ->
-          namespace
-
-        _ ->
-          namespaces = List.wrap(namespaces)
-
-          if ctx.assigns.namespace in namespaces,
-            do: ctx.assigns.namespace,
-            else: List.first(namespaces)
-      end
-
     ctx
-    |> assign(namespaces: namespaces, namespace: namespace)
+    |> assign(SmartCellHelper.get_namespaces(ctx))
     |> set_resources()
   end
 
@@ -323,7 +297,7 @@ defmodule KinoK8s.GetCell do
       ctx
       |> assign(resources: resources, resource: resource)
     else
-      _ -> ctx
+      _other -> ctx
     end
   end
 
