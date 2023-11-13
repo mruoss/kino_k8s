@@ -184,6 +184,7 @@ defmodule KinoK8s.TerminalCell do
 
       _ ->
         ctx
+        |> assign(pods: [], pod: ctx.assigns[:pod] || "")
     end
   end
 
