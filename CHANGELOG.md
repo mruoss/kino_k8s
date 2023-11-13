@@ -12,7 +12,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
-- Integration tests using Playwright
+- Basic Integration test using Playwright
+- Better support for roles with fewer permissions than (cluster-) admin. [#26](https://github.com/mruoss/kino_k8s/issues/26)
 
 <!--------------------- Don't add new entries after this line --------------------->
 
