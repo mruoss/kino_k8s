@@ -2,6 +2,7 @@ import { KinoContext } from '../kino'
 import useAttrsState from '../shared/attr_state'
 import ConnNotice from '../shared/conn_notice'
 import Select from '../shared/form/select'
+import SelectOrInput from '../shared/form/select_or_input'
 import { TerminalCellAttrs } from './types'
 
 interface AppProps {
@@ -41,7 +42,7 @@ const App = ({ initialAttrs, ctx }: AppProps) => {
         </div>
         <div className="flex gap-x-5 p-3">
           {attrs['namespaces'] && (
-            <Select
+            <SelectOrInput
               name="namespace"
               label="Namespace"
               options={attrs.namespaces.map((ns) => ({
@@ -53,7 +54,7 @@ const App = ({ initialAttrs, ctx }: AppProps) => {
             />
           )}
           {attrs.pods && (
-            <Select
+            <SelectOrInput
               name="pod"
               label="Pod Name"
               options={attrs.pods.map((ns) => ({
@@ -65,7 +66,7 @@ const App = ({ initialAttrs, ctx }: AppProps) => {
             />
           )}
           {attrs.containers && (
-            <Select
+            <SelectOrInput
               name="container"
               label="Container Name"
               options={attrs.containers.map((ns) => ({

@@ -95,7 +95,7 @@ const App: React.FC<AppProps> = ({ initialAttrs, ctx }) => {
             />
           )}
           {attrs.resources && (
-            <Select
+            <SelectOrInput
               name="resource"
               label="Resource Name"
               options={attrs.resources.map((ns) => ({

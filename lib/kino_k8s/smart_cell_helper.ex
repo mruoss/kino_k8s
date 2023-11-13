@@ -18,10 +18,10 @@ defmodule KinoK8s.SmartCellHelper do
     namespaces =
       case K8sHelper.namespaces(conn) do
         {:ok, namespaces} ->
-          if ctx.assigns.request_type == "get", do: namespaces, else: ["__ALL__" | namespaces]
+          namespaces
 
         _ ->
-          if is_nil(conn.namespace), do: nil, else: [conn.namespace]
+          []
       end
 
     namespace =

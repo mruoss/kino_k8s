@@ -273,8 +273,19 @@ defmodule KinoK8s.GetCell do
   end
 
   defp set_namespaces(ctx) do
+    assigns =
+      ctx
+      |> SmartCellHelper.get_namespaces()
+      |> Keyword.update!(:namespaces, fn
+        [] ->
+          []
+
+        namespaces ->
+          if ctx.assigns.request_type == "get", do: namespaces, else: ["__ALL__" | namespaces]
+      end)
+
     ctx
-    |> assign(SmartCellHelper.get_namespaces(ctx))
+    |> assign(assigns)
     |> set_resources()
   end
 
@@ -297,7 +308,8 @@ defmodule KinoK8s.GetCell do
       ctx
       |> assign(resources: resources, resource: resource)
     else
-      _other -> ctx
+      _other ->
+        assign(ctx, resources: [], resource: ctx.assigns[:resource] || "")
     end
   end
 
