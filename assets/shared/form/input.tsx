@@ -3,7 +3,7 @@ import classNames from 'classnames'
 type InputProps = {
   name: string
   label: string
-  defaultValue: string
+  defaultValue?: string
   testId?: string
   onChange: (value: string) => void
   orientation?: 'horiz' | 'vert'

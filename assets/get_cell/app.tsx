@@ -4,6 +4,7 @@ import ConnNotice from '../shared/conn_notice'
 import Input from '../shared/form/input'
 import SearchSelect from '../shared/form/search_select'
 import Select from '../shared/form/select'
+import SelectOrInput from '../shared/form/select_or_input'
 import GVKOption from '../shared/gvk_option'
 import { GVK } from '../shared/types'
 import { ListCellAttrs } from './types'
@@ -82,7 +83,7 @@ const App: React.FC<AppProps> = ({ initialAttrs, ctx }) => {
             />
           )}
           {attrs.namespaces && (
-            <Select
+            <SelectOrInput
               name="namespace"
               label="Namespace"
               options={attrs.namespaces.map((ns) => ({

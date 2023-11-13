@@ -7,16 +7,37 @@ Mix.install([{:kino_k8s, path: "~/src/community/kino_k8s"}])
 
 ## Section
 
-<!-- livebook:{"attrs":{"opts":{"context":"kind-kino-k8s","insecure_skip_tls_verify":true},"result_variable":"conn","source":"~/.kube/config","source_type":"file"},"chunks":null,"kind":"Elixir.KinoK8s.ConnectionCell","livebook_object":"smart_cell"} -->
+<!-- livebook:{"attrs":{"opts":{"context":"inf-ppe-aks-sn","insecure_skip_tls_verify":true},"result_variable":"conn","source":"~/.kube/config","source_type":"file"},"chunks":null,"kind":"Elixir.KinoK8s.ConnectionCell","livebook_object":"smart_cell"} -->
 
 ```elixir
 {:ok, conn} =
   K8s.Conn.from_file("~/.kube/config",
-    context: "kind-kino-k8s",
+    context: "inf-ppe-aks-sn",
     insecure_skip_tls_verify: true
   )
 
 conn
+```
+
+<!-- livebook:{"attrs":{"connection":{"conn_hash":30293911,"variable":"conn"},"connections":[{"conn_hash":30293911,"variable":"conn"}],"gvk":{"api_version":"v1","index":"v1configmaps","kind":"ConfigMap","name":"configmaps","namespaced":true},"namespace":"external-secrets","namespaces":["ambassador","apm-proxy","argocd","azureserviceoperator-system","cert-manager","cnrm-system","db-operator","default","e2e","external-secrets","gatekeeper-system","ingress-nginx","kube-node-lease","kube-public","kube-system","mailpit","mailpit-restricted","michael-playground","oauth2-proxy","oauth2-proxy-rmq-test","pr-8938","rabbitmq-system","rmq-management","stnr-infra","techtalk","test","universal-profiling"],"request_type":"get","request_types":["get","list","watch"],"resource":"kube-root-ca.crt","resources":["kube-root-ca.crt"],"result_type":null,"result_types":{"get":null,"list":["list","stream"],"watch":["stream"]},"result_variable":"result"},"chunks":null,"kind":"Elixir.KinoK8s.GetCell","livebook_object":"smart_cell"} -->
+
+````elixir
+{:ok, result} =
+  K8s.Client.get("v1", "configmaps",
+    name: "kube-root-ca.crt",
+    namespace: "external-secrets"
+  )
+  |> K8s.Client.put_conn(conn)
+  |> K8s.Client.run()
+
+Kino.Markdown.new("```yaml
+#{Ymlr.document!(result)}
+```
+")
+````
+
+```elixir
+
 ```
 
 ```elixir
@@ -51,13 +72,7 @@ cluster_admin_conn =
   )
 ```
 
-<!-- livebook:{"attrs":{"connection":{"conn_hash":100330371,"variable":"conn"},"connections":[{"conn_hash":100330371,"variable":"conn"}],"gvk":null,"namespace":null,"namespaces":null,"request_type":"list","request_types":["get","list","watch"],"resource":null,"resources":null,"result_type":"list","result_types":{"get":null,"list":["list","stream"],"watch":["stream"]},"result_variable":"stream"},"chunks":null,"kind":"Elixir.KinoK8s.GetCell","livebook_object":"smart_cell"} -->
-
-```elixir
-
-```
-
-<!-- livebook:{"attrs":{"connect_to":"logs","connect_tos":["exec","logs"],"connection":{"conn_hash":21208925,"variable":"admin_conn"},"connections":[{"conn_hash":21208925,"variable":"admin_conn"},{"conn_hash":100330371,"variable":"conn"},{"conn_hash":97020151,"variable":"cluster_admin_conn"}],"container":null,"containers":null,"namespace":"kino-k8s","namespaces":["kino-k8s"],"pod":null,"pods":[]},"chunks":null,"kind":"Elixir.KinoK8s.TerminalCell","livebook_object":"smart_cell"} -->
+<!-- livebook:{"attrs":{"connect_to":"logs","connect_tos":["exec","logs"],"connection":null,"connections":[],"container":null,"containers":null,"namespace":null,"namespaces":null,"pod":null,"pods":null},"chunks":null,"kind":"Elixir.KinoK8s.TerminalCell","livebook_object":"smart_cell"} -->
 
 ```elixir
 
