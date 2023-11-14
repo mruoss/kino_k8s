@@ -1,22 +1,14 @@
 {
-  extends: ['config:base'],
-  dependencyDashboard: true,
-  ignoreDeps: [],
-  rebaseWhen: 'behind-base-branch',
-  branchConcurrentLimit: 10,
-  lockFileMaintenance: {
-    enabled: true,
-    automerge: true,
-  },
-  addLabels: ['renovate-update'],
+  extends: [
+    'config:base',
+    ':automergeMinor',
+    ':automergePr',
+    ':dependencyDashboard',
+    ':label(renovate-update)',
+    ':rebaseStalePrs',
+    ':prConcurrentLimit10',
+  ],
   cdnurl: {
     fileMatch: ['^assets/.*\\.tsx?$'],
   },
-  packageRules: [
-    {
-      matchUpdateTypes: ['minor', 'patch'],
-      matchCurrentVersion: '!/^0/',
-      automerge: true,
-    },
-  ],
 }

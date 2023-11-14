@@ -11,8 +11,16 @@ A Livebook Kino for learning to use the k8s Elixir library.
 
 ## Installation
 
+Install the latest 1.x version:
+
 ```elixir
 Mix.install([{:kino_k8s, "~> 1.0"}])
+```
+
+To install the latest from `main` branch:
+
+```elixir
+Mix.install([{:kino_k8s, github: "mruoss/kino_k8s"}])
 ```
 
 ## Smart Cells
