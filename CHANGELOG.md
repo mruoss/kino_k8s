@@ -12,6 +12,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 <!--------------------- Don't add new entries after this line --------------------->
 
+## [1.2.1] - 2023-11-29
+
+### Changed
+
+- Upgrade `xterm.js` dependency to `v5.3.0`
+
 ## [1.2.0] - 2023-11-14
 
 ### Added
