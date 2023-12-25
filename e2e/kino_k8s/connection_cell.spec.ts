@@ -26,10 +26,15 @@ test.beforeEach(async ({ page }) => {
 
 test.describe('File', () => {
   test('loads from local file', async ({ page }) => {
-    const cell = page.locator('[data-smart-cell-js-view-ref]').first()
     const iframe = page.frameLocator('iframe').first()
     await iframe.getByTestId('source').fill(process.env.KUBECONFIG!)
     await iframe.getByTestId('context').fill(process.env.KUBECONTEXT!)
+    const focusedCellId = await page
+      .locator('[data-el-session]')
+      .first()
+      .getAttribute('data-js-focused-id')
+
+    const cell = await page.locator(`div[data-focusable-id=${focusedCellId}]`)
     await cell.locator('button[data-el-queue-cell-evaluation-button]').click()
 
     const result = page.frameLocator('iframe').nth(1).locator('body')
