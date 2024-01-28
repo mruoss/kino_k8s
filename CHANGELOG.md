@@ -12,6 +12,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 <!--------------------- Don't add new entries after this line --------------------->
 
+## [1.2.2] - 2024-01-28
+
+### Changed
+
+- Dependency Updates
+
 ## [1.2.1] - 2023-11-29
 
 ### Changed
