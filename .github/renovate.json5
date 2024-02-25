@@ -1,9 +1,9 @@
 {
   extends: [
     'config:base',
+    'config:recommended',
     ':automergeMinor',
     ':automergePr',
-    ':dependencyDashboard',
     ':label(renovate-update)',
     ':rebaseStalePrs',
     ':prConcurrentLimit10',
