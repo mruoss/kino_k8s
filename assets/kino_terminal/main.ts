@@ -3,10 +3,10 @@ import { KinoTerminalAttrs } from './types'
 
 export async function init(ctx: KinoContext, attrs: KinoTerminalAttrs) {
   await ctx.importCSS(
-    'https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.min.css',
+    'https://cdnjs.cloudflare.com/ajax/libs/xterm/5.4.0/xterm.min.css',
   )
   await ctx.importJS(
-    'https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.min.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/xterm/5.4.0/xterm.js',
   )
 
   ctx.root.innerHTML = `
