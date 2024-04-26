@@ -18,17 +18,17 @@ export const debounce = <T extends (...args: any[]) => ReturnType<T>>(
 export const loadReact = async (ctx: KinoContext): Promise<void> => {
   if (DEBUG) {
     await ctx.importJS(
-      'https://cdnjs.cloudflare.com/ajax/libs/react/18.3.0/umd/react.development.js',
+      'https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.development.js',
     )
     await ctx.importJS(
-      'https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.0/umd/react-dom.development.js',
+      'https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.development.js',
     )
   } else {
     await ctx.importJS(
-      'https://cdnjs.cloudflare.com/ajax/libs/react/18.3.0/umd/react.production.min.js',
+      'https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js',
     )
     await ctx.importJS(
-      'https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.0/umd/react-dom.production.min.js',
+      'https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js',
     )
   }
 }
