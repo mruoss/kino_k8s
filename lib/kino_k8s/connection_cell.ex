@@ -18,7 +18,7 @@ defmodule KinoK8s.ConnectionCell do
         result_variable: Kino.SmartCell.prefixed_var_name("conn", attrs["result_variable"]),
         source_type: attrs["source_type"] || @default_source_type,
         source: attrs["source"] || @default_file,
-        opts: attrs["opts"] || %{"insecure_skip_tls_verify" => true}
+        opts: attrs["opts"] || %{"insecure_skip_tls_verify" => false}
         # running_on_k8s: File.exists?("/var/run/secrets/kubernetes.io/serviceaccount"),
       )
 
