@@ -12,6 +12,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 <!--------------------- Don't add new entries after this line --------------------->
 
+## [1.2.3] - 2024-04-29
+
+### Changed
+
+- Set `insecure_skip_tls_verify` to `false` by default.
+
 ## [1.2.2] - 2024-01-28
 
 ### Changed
