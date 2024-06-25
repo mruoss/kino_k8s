@@ -26,7 +26,8 @@ jobs:
           install-hex: true
 
       - name: install livebook
-        run: mix escript.install --force hex livebook
+        # run: mix escript.install --force hex livebook
+        run: mix escript.install --force github livebook-dev/livebook
 
       - uses: engineerd/setup-kind@v0.5.0
         id: kind
