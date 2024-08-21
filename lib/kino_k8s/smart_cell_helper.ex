@@ -1,4 +1,6 @@
 defmodule KinoK8s.SmartCellHelper do
+  @moduledoc false
+
   alias KinoK8s.K8sHelper
   alias KinoK8s.ResourceGVKCache
 
