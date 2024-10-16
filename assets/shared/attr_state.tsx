@@ -1,4 +1,5 @@
-import { KinoContext } from '../kino'
+import React from 'react'
+import { KinoContext } from './kino'
 
 type UpdateAttrFun<AttrsType> = (
   attrName: string,
