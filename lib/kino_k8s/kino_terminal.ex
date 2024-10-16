@@ -2,7 +2,7 @@ defmodule KinoK8s.KinoTerminal do
   @moduledoc """
   A Livebook Kino providing a Terminal to a Kubernetes Pod.
   """
-  use Kino.JS, assets_path: "lib/assets/kino_terminal"
+  use Kino.JS, assets_path: "lib/assets/kino_terminal/build"
   use Kino.JS.Live
 
   @doc """

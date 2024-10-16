@@ -25,8 +25,8 @@ kino_k8s-*.tar
 # Temporary files, for example, from tests.
 /tmp/
 
-# Node modules
-*node_modules/*
+# Node modules.
+/assets/node_modules
 
 *.livemd_files
 /test-results/

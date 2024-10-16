@@ -1,7 +1,7 @@
 defmodule KinoK8s.ApplyCell do
   @moduledoc false
 
-  use Kino.JS, assets_path: "lib/assets/apply_cell"
+  use Kino.JS, assets_path: "lib/assets/apply_cell/build"
   use Kino.JS.Live
   use Kino.SmartCell, name: "K8s - Create / Update / Apply Resource"
 
