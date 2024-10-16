@@ -1,3 +1,4 @@
+import React from 'react'
 import { GVK } from './types'
 
 export const GVKOption = ({ gvk }: { gvk: GVK }) => (

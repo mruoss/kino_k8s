@@ -41,8 +41,9 @@ the `Cluster Connection` smart cell before adding any other smart cells.
 ### Build and Watch Javascript and CSS
 
 ```bash
+cd assets
 npm install
-npm start
+npm run dev
 ```
 
 ### Install and run livebook
@@ -55,5 +56,7 @@ livebook server ./dev.livemd
 ### Build Assets
 
 ```bash
+cd assets
+npm install
 npm run build
 ```
