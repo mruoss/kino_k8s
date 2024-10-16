@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import path from 'path'
 
 test.beforeEach(async ({ page }) => {
   await page.goto('http://localhost:8080/new')
@@ -7,7 +8,9 @@ test.beforeEach(async ({ page }) => {
   await page
     .locator('#cell-editor-setup-primary')
     .getByRole('textbox')
-    .fill(`Mix.install([{:kino_k8s, path: "${process.cwd()}"}])`)
+    .fill(
+      `Mix.install([{:kino_k8s, path: "${path.resolve(path.join(process.cwd(), '..'))}"}])`,
+    )
 
   await page.getByRole('button', { name: 'Reconnect and setup' }).click()
 
