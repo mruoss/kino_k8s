@@ -12,6 +12,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 <!--------------------- Don't add new entries after this line --------------------->
 
+## Changed
+
+Use [`@livebook/kino-bundler`](https://github.com/livebook-dev/kino-bundler) to bundle the JS/CSS. [#365](https://github.com/mruoss/kino_k8s/pull/365)
+
 ## [1.2.4] - 2024-08-21
 
 ### Changed
