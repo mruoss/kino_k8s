@@ -11,316 +11,236 @@ defmodule KinoK8s.GetCell do
 
   @default_request_type "get"
   @request_types ["get", "list", "watch"]
-  @result_types %{"get" => nil, "list" => ["list", "stream"], "watch" => ["stream"]}
 
   @impl true
-  def init(attrs, ctx) do
+  def init(fields, ctx) do
+    kubeconfig = Kubereq.Kubeconfig.load(Kubereq.Kubeconfig.Default)
+
+    fields = %{
+      "result_variable" => Kino.SmartCell.prefixed_var_name("result", fields["result_variable"]),
+      "contexts" => Enum.map(kubeconfig.contexts, & &1["name"]),
+      "context" => fields["context"] || kubeconfig.current_context,
+      "request_types" => @request_types,
+      "request_type" => fields["request_type"] || @default_request_type,
+      "gvk" => fields["gvk"],
+      "namespaces" => fields["namespaces"],
+      "namespace" => fields["namespace"],
+      "resources" => fields["resources"],
+      "resource" => fields["resource"]
+    }
+
     ctx =
       assign(ctx,
-        connections: [],
-        connection: nil,
-        result_variable: Kino.SmartCell.prefixed_var_name("result", attrs["result_variable"]),
-        request_types: @request_types,
-        request_type: attrs["request_type"] || @default_request_type,
-        result_types: @result_types,
-        result_type:
-          attrs["result_type"] ||
-            @result_types[attrs["request_types"]] |> List.wrap() |> List.first(),
-        gvk: attrs["gvk"],
-        namespaces: attrs["namespaces"],
-        namespace: attrs["namespace"],
-        resources: attrs["resources"],
-        resource: attrs["resource"]
+        req: Req.new() |> Kubereq.attach(kubeconfig: kubeconfig),
+        fields: fields
       )
+      |> update_field("context")
 
     {:ok, ctx}
   end
 
   @impl true
   def handle_connect(ctx) do
-    {:ok, get_js_attrs(ctx), ctx}
+    payload = %{fields: ctx.assigns.fields}
+    {:ok, payload, ctx}
   end
 
   @impl true
-  def handle_event("update_connection", variable, ctx) do
-    connection = Enum.find(ctx.assigns.connections, &(&1.variable == variable))
-
-    {
-      :noreply,
-      ctx
-      |> assign(connection: connection)
-      |> set_gvk(nil)
-      |> broadcast_update()
-    }
-  end
-
-  @impl true
-  def handle_event("update_result_variable", variable, ctx) do
+  def handle_event("update_field", %{"field" => field, "value" => value}, ctx) do
     ctx =
-      if Kino.SmartCell.valid_variable_name?(variable) do
-        assign(ctx, result_variable: variable)
+      ctx
+      |> update(:fields, &Map.merge(&1, %{field => value}))
+      |> update_field(field)
+
+    {:noreply, ctx}
+  end
+
+  defp update_field(ctx, "request_type"), do: ctx
+
+  defp update_field(ctx, "context") do
+    ResourceGVKCache.init_cache(ctx.assigns.fields["context"])
+
+    ctx
+    |> broadcast_update(%{"gvk" => nil})
+    |> update_field("gvk")
+  end
+
+  defp update_field(ctx, "gvk") do
+    ctx =
+      if ctx.assigns.fields["gvk"] == nil or ctx.assigns.fields["gvk"]["namespaced"] == nil do
+        broadcast_update(ctx, %{
+          "namespaces" => nil,
+          "namespace" => nil,
+          "search_term" => "",
+          "search_result_items" => []
+        })
       else
-        ctx
+        send_event(ctx, ctx.origin, "update", %{
+          "fields" => %{"search_term" => "", "search_result_items" => []}
+        })
+
+        new_fields =
+          ctx
+          |> SmartCellHelper.get_namespaces()
+          |> Map.update!("namespaces", fn
+            [] ->
+              []
+
+            namespaces ->
+              if ctx.assigns.fields["request_type"] == "get",
+                do: namespaces,
+                else: ["__ALL__" | namespaces]
+          end)
+
+        broadcast_update(ctx, new_fields)
       end
 
-    {:noreply, broadcast_update(ctx)}
+    update_field(ctx, "namespace")
   end
 
-  def handle_event("update_search_term", search_term, ctx) do
-    case perform_search(search_term, ctx.assigns.connection.conn_hash) do
+  defp update_field(ctx, "namespace") do
+    namespace = ctx.assigns.fields["namespace"]
+    gvk = ctx.assigns.fields["gvk"]
+    request_type = ctx.assigns.fields["request_type"]
+    resource = ctx.assigns.fields["resource"]
+
+    if is_nil(namespace) or request_type != "get" do
+      broadcast_update(ctx, %{"resources" => nil, "resource" => ""})
+    else
+      with {:ok, resources} <-
+             K8sHelper.resources(ctx.assigns.req, gvk["api_version"], gvk["kind"], namespace) do
+        resource =
+          if resource in resources,
+            do: resource,
+            else: List.first(resources)
+
+        broadcast_update(ctx, %{"resources" => resources, "resource" => resource})
+      else
+        _other ->
+          broadcast_update(ctx, %{"resources" => [], "resource" => ""})
+      end
+    end
+  end
+
+  defp update_field(ctx, "search_term") do
+    %{"search_term" => search_term} = ctx.assigns.fields
+
+    case perform_search(ctx.assigns.fields["context"], search_term) do
       [gvk] ->
-        {:noreply, ctx |> set_gvk(gvk) |> broadcast_update()}
+        ctx
+        |> broadcast_update(%{"gvk" => gvk})
+        |> update_field("gvk")
 
       search_result_items ->
         send_event(ctx, ctx.origin, "update", %{
-          search_result_items: search_result_items,
-          gvk: nil
+          "fields" => %{"search_result_items" => search_result_items, "gvk" => nil}
         })
-
-        {:noreply, ctx}
     end
-  end
-
-  def handle_event("update_gvk", gvk, ctx) do
-    {:noreply, ctx |> set_gvk(gvk) |> broadcast_update()}
-  end
-
-  def handle_event("update_namespace", namespace, ctx) do
-    {:noreply,
-     ctx
-     |> assign(namespace: namespace)
-     |> set_resources()
-     |> broadcast_update()}
-  end
-
-  def handle_event("update_resource", resource, ctx) do
-    {:noreply,
-     ctx
-     |> assign(resource: resource)
-     |> broadcast_update()}
-  end
-
-  def handle_event("update_request_type", request_type, ctx) do
-    result_type = @result_types[request_type] |> List.wrap() |> List.first()
-
-    {:noreply,
-     ctx
-     |> assign(request_type: request_type, result_type: result_type)
-     |> set_namespaces()
-     |> broadcast_update()}
-  end
-
-  def handle_event("update_result_type", result_type, ctx) do
-    {:noreply,
-     ctx
-     |> assign(result_type: result_type)
-     |> broadcast_update()}
-  end
-
-  @impl true
-  def handle_info({:connections, connections}, ctx) do
-    {:noreply,
-     ctx
-     |> assign(
-       connections: connections,
-       connection: ctx.assigns.connection || List.first(connections)
-     )
-     |> set_gvk(ctx.assigns.gvk)
-     |> broadcast_update()}
-  end
-
-  @impl true
-  def scan_binding(pid, binding, _env), do: SmartCellHelper.scan_connections(pid, binding)
-
-  defp set_gvk(ctx, _) when is_nil(ctx.assigns.connection) do
-    ctx
-    |> assign(gvk: nil)
-    |> set_namespaces()
-  end
-
-  defp set_gvk(ctx, gvk) do
-    send_event(ctx, ctx.origin, "update", %{search_term: "", search_result_items: []})
 
     ctx
-    |> assign(gvk: gvk)
-    |> set_namespaces()
   end
 
-  defp broadcast_update(ctx) do
-    broadcast_event(ctx, "update", get_js_attrs(ctx))
-    ctx
-  end
+  defp update_field(ctx, _field), do: ctx
 
-  @impl true
-  def to_attrs(ctx), do: get_js_attrs(ctx)
-
-  defp get_js_attrs(ctx) do
-    Map.new(ctx.assigns, fn {key, value} -> {Atom.to_string(key), value} end)
+  defp broadcast_update(ctx, fields_to_update) do
+    broadcast_event(ctx, "update", %{"fields" => fields_to_update})
+    update(ctx, :fields, &Map.merge(&1, fields_to_update))
   end
 
   @impl true
-  def to_source(%{"request_type" => "get"} = attrs) do
-    if all_fields_filled?(attrs, ["connection", "result_variable", "gvk", "resource"]) do
-      %{
-        "connection" => connection,
-        "result_variable" => result_variable,
-        "namespace" => namespace,
-        "resource" => resource
-      } = attrs
-
-      %{"api_version" => api_version, "name" => gvk_name} = attrs["gvk"]
-
-      path_params =
-        if is_nil(namespace), do: [name: resource], else: [name: resource, namespace: namespace]
-
-      quote do
-        {:ok, unquote(quoted_var(result_variable))} =
-          K8s.Client.get(unquote(api_version), unquote(gvk_name), unquote(path_params))
-          |> K8s.Client.put_conn(unquote(quoted_var(connection.variable)))
-          |> K8s.Client.run()
-
-        Kino.Markdown.new("""
-        ```yaml
-        #{Ymlr.document!(unquote(quoted_var(result_variable)))}
-        ```
-        """)
-      end
-      |> Kino.SmartCell.quoted_to_string()
-    else
-      ""
-    end
+  def to_attrs(%{assigns: %{fields: fields}}) do
+    Map.take(fields, ["request_type", "result_variable", "gvk", "resource", "namespace"])
   end
 
+  @impl true
   def to_source(attrs) do
-    dbg(attrs)
-
-    if all_fields_filled?(attrs, [
-         "connection",
-         "result_variable",
-         "request_type",
-         "result_type",
-         "gvk"
-       ]) do
-      %{
-        "connection" => connection,
-        "result_variable" => result_variable,
-        "request_type" => request_type,
-        "result_type" => result_type,
-        "namespace" => namespace
-      } = attrs
-
-      %{"api_version" => api_version, "name" => gvk_name} = attrs["gvk"]
-
-      path_params =
-        case namespace do
-          "__ALL__" -> [namespace: :all]
-          nil -> []
-          other -> [namespace: other]
-        end
-
-      request_method =
-        case request_type do
-          "get" -> quote do: :get
-          "list" -> quote do: :list
-          "watch" -> quote do: :watch
-        end
-
-      run_method =
-        case result_type do
-          "list" -> quote do: :run
-          "stream" -> quote do: :stream
-        end
-
-      quote do
-        {:ok, unquote(quoted_var(result_variable))} =
-          K8s.Client.unquote(request_method)(
-            unquote(api_version),
-            unquote(gvk_name),
-            unquote(path_params)
-          )
-          |> K8s.Client.put_conn(unquote(quoted_var(connection.variable)))
-          |> K8s.Client.unquote(run_method)()
-
-        Kino.Tree.new(unquote(quoted_var(result_variable)))
+    required_keys =
+      case attrs["request_type"] do
+        "get" -> ["result_variable", "gvk", "resource", "namespace"]
+        "list" -> ["result_variable", "gvk"]
+        "watch" -> ["result_variable", "gvk"]
       end
+
+    if all_fields_filled?(attrs, required_keys) do
+      attrs
+      |> Map.update!("namespace", fn
+        "__ALL__" -> nil
+        other -> other
+      end)
+      |> to_quoted()
       |> Kino.SmartCell.quoted_to_string()
     else
       ""
     end
   end
 
-  defp perform_search(search_term, conn_hash) do
+  defp to_quoted(%{"request_type" => "get"} = attrs) do
+    quote do
+      unquote(quoted_req(attrs))
+
+      %{body: unquote(quoted_var(attrs["result_variable"]))} =
+        Kubereq.get!(req, unquote(attrs["namespace"]), unquote(attrs["resource"]))
+
+      Kino.Tree.new(unquote(quoted_var(attrs["result_variable"])))
+    end
+  end
+
+  defp to_quoted(%{"request_type" => "list"} = attrs) do
+    quote do
+      unquote(quoted_req(attrs))
+
+      %{body: unquote(quoted_var(attrs["result_variable"]))} =
+        Kubereq.list!(req, unquote(attrs["namespace"]))
+
+      keys = ["namespace", "name", "resourceVersion", "creationTimestamp"]
+
+      unquote(quoted_var(attrs["result_variable"]))["items"]
+      |> Enum.map(&Map.take(&1["metadata"], keys))
+      |> Kino.DataTable.new(
+        name: unquote(quoted_var(attrs["result_variable"]))["kind"],
+        keys: keys
+      )
+    end
+  end
+
+  defp to_quoted(%{"request_type" => "watch"} = attrs) do
+    quote do
+      unquote(quoted_req(attrs))
+
+      %{body: unquote(quoted_var(attrs["result_variable"]))} =
+        Kubereq.watch!(req, unquote(attrs["namespace"]))
+
+      unquote(quoted_var(attrs["result_variable"]))
+    end
+  end
+
+  defp quoted_req(attrs) do
+    quote do
+      req =
+        Req.new()
+        |> Kubereq.attach(
+          context: unquote(attrs["context"]),
+          api_version: unquote(attrs["gvk"]["api_version"]),
+          kind: unquote(attrs["gvk"]["kind"])
+        )
+    end
+  end
+
+  defp perform_search(context, search_term) do
     if byte_size(search_term) < 3 do
       []
     else
       search_terms = String.split(search_term, ~r/\W/)
 
-      ResourceGVKCache.get_gvks(conn_hash)
+      ResourceGVKCache.get_gvks(context)
       |> Enum.filter(fn res -> Enum.all?(search_terms, &String.contains?(res["index"], &1)) end)
     end
   end
 
-  defp set_namespaces(%{:assigns => %{:gvk => nil}} = ctx) do
-    ctx
-    |> assign(namespaces: nil, namespace: nil)
-    |> set_resources()
-  end
-
-  defp set_namespaces(%{:assigns => %{:gvk => %{"namespaced" => false}}} = ctx) do
-    ctx
-    |> assign(namespaces: nil, namespace: nil)
-    |> set_resources()
-  end
-
-  defp set_namespaces(ctx) do
-    assigns =
-      ctx
-      |> SmartCellHelper.get_namespaces()
-      |> Keyword.update!(:namespaces, fn
-        [] ->
-          []
-
-        namespaces ->
-          if ctx.assigns.request_type == "get", do: namespaces, else: ["__ALL__" | namespaces]
-      end)
-
-    ctx
-    |> assign(assigns)
-    |> set_resources()
-  end
-
-  defp set_resources(ctx)
-       when is_nil(ctx.assigns.namespace) or ctx.assigns.request_type != "get" do
-    assign(ctx, resources: nil, resource: nil)
-  end
-
-  defp set_resources(ctx) do
-    namespace = ctx.assigns.namespace
-    gvk = ctx.assigns.gvk
-
-    with {:ok, resources} <-
-           K8sHelper.resources(conn(ctx), gvk["api_version"], gvk["kind"], namespace) do
-      resource =
-        if ctx.assigns.resource in resources,
-          do: ctx.assigns.resource,
-          else: List.first(resources)
-
-      ctx
-      |> assign(resources: resources, resource: resource)
-    else
-      _other ->
-        assign(ctx, resources: [], resource: ctx.assigns[:resource] || "")
-    end
-  end
-
-  defp all_fields_filled?(attrs, keys) do
-    not Enum.any?(keys, fn key -> attrs[key] in [nil, ""] end)
+  defp all_fields_filled?(fields, keys) do
+    not Enum.any?(keys, fn key -> fields[key] in [nil, ""] end)
   end
 
   defp quoted_var(nil), do: nil
   defp quoted_var(string), do: {String.to_atom(string), [], nil}
-
-  defp conn(ctx) do
-    ResourceGVKCache.get_conn(ctx.assigns.connection.conn_hash)
-  end
 end

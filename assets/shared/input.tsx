@@ -4,6 +4,7 @@ import classNames from 'classnames'
 type InputProps = {
   name: string
   label: string
+  className: string
   defaultValue?: string
   testId?: string
   onChange: (value: string) => void
@@ -12,6 +13,7 @@ type InputProps = {
 const Input: React.FC<InputProps> = ({
   name,
   label,
+  className,
   defaultValue,
   testId,
   onChange,
@@ -19,7 +21,7 @@ const Input: React.FC<InputProps> = ({
 }) => {
   return (
     <div
-      className={classNames({
+      className={classNames(className, {
         'flex flex-row items-baseline': orientation == 'horiz',
       })}
     >

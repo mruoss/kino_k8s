@@ -18,10 +18,10 @@ const useFieldsState = <FieldsType extends object>(
     }
 
   React.useEffect(() => {
-    ctx.handleEvent<FieldsType>('update', (updates) => {
-      console.log('Fieldibute update from server', updates)
+    ctx.handleEvent<{ fields: FieldsType }>('update', (updates) => {
+      console.log('Field update from server', updates)
       setFields((fields) => ({
-        ...Object.assign(fields, updates),
+        ...Object.assign(fields, updates.fields),
       }))
     })
   }, [])

@@ -15,10 +15,10 @@ defmodule KinoK8s.SmartCellHelper do
   end
 
   def get_namespaces(ctx) do
-    conn = conn(ctx)
+    req = ctx.assigns.req
 
     namespaces =
-      case K8sHelper.namespaces(conn) do
+      case K8sHelper.namespaces(req) do
         {:ok, namespaces} ->
           namespaces
 
@@ -26,23 +26,16 @@ defmodule KinoK8s.SmartCellHelper do
           []
       end
 
+    namespaces = List.wrap(namespaces)
+
     namespace =
-      case conn.namespace do
-        nil ->
-          namespaces = List.wrap(namespaces)
-
-          if ctx.assigns.namespace in namespaces,
-            do: ctx.assigns.namespace,
-            else: List.first(namespaces)
-
-        namespace ->
-          namespace
+      if !is_nil(ctx.assigns.fields["namespace"]) and
+           ctx.assigns.fields["namespace"] in namespaces do
+        ctx.assigns.fields["namespace"]
+      else
+        req.options.kubeconfig.current_namespace || List.first(namespaces)
       end
 
-    [namespaces: namespaces, namespace: namespace]
-  end
-
-  defp conn(ctx) do
-    ResourceGVKCache.get_conn(ctx.assigns.connection.conn_hash)
+    %{"namespaces" => namespaces, "namespace" => namespace}
   end
 end
