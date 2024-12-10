@@ -6,11 +6,11 @@ import { createRoot } from 'react-dom/client'
 import Error from '../../shared/error'
 import { KinoContext } from '../../shared/kino'
 import App from './app'
-import { ListCellAttrs } from './types'
+import { GetCellFields } from './types'
 
 export const init = async (
   ctx: KinoContext,
-  attrs: ListCellAttrs,
+  payload: { fields: GetCellFields },
 ): Promise<void> => {
   ctx.root.innerHTML = 'loading...'
   ctx.importCSS('main.css')
@@ -19,9 +19,9 @@ export const init = async (
   )
 
   const root = createRoot(ctx.root)
-  if (attrs.error) {
-    return root.render(<Error message={attrs.error} />)
+  if (payload.fields.error) {
+    return root.render(<Error message={payload.fields.error} />)
   }
 
-  root.render(<App initialAttrs={attrs} ctx={ctx} />)
+  root.render(<App payload={payload} ctx={ctx} />)
 }

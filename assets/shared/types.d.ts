@@ -1,4 +1,4 @@
-export interface Attributes {
+export interface Fields {
   error?: string
   result_variable: string
 }

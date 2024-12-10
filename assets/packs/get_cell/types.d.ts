@@ -1,6 +1,8 @@
-import { Attributes, GVK } from '../../shared/types'
+import { Fields, GVK } from '../../shared/types'
 
-export interface ListCellAttrs extends Attributes {
+export interface GetCellFields extends Fields {
+  contexts: string[]
+  context: string
   connection?: { variable: string }
   connections: { variable: string }[]
   request_type: string

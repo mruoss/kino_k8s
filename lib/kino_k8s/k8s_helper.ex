@@ -1,21 +1,16 @@
 defmodule KinoK8s.K8sHelper do
   @moduledoc false
 
-  def namespaces(conn) do
-    with {:ok, ns_list} <-
-           K8s.Client.list("v1", "namespace")
-           |> K8s.Client.put_conn(conn)
-           |> K8s.Client.run() do
-      {:ok, get_in(ns_list, ["items", Access.all(), "metadata", "name"])}
+  def namespaces(req) do
+    with {:ok, %{status: 200, body: body}} <- Kubereq.list(req, kind: "Namespace") do
+      {:ok, get_in(body, ["items", Access.all(), "metadata", "name"])}
     end
   end
 
-  def resources(conn, api_version, kind, namespace) do
-    with {:ok, pod_list} <-
-           K8s.Client.list(api_version, kind, namespace: namespace)
-           |> K8s.Client.put_conn(conn)
-           |> K8s.Client.run() do
-      {:ok, get_in(pod_list, ["items", Access.all(), "metadata", "name"])}
+  def resources(req, api_version, kind, namespace) do
+    with {:ok, %{status: 200, body: body}} <-
+           Kubereq.list(req, namespace, api_version: api_version, kind: kind) do
+      {:ok, get_in(body, ["items", Access.all(), "metadata", "name"])}
     end
   end
 

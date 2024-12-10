@@ -5,15 +5,11 @@ defmodule KinoK8s.ResourceGVKCache do
 
   require Logger
 
-  @type conn_hash :: binary()
-  @type conn_t :: %{
-          conn: K8s.Conn.t(),
-          gvks: [map],
-          waiting: [pid()]
-        }
-
   @type t :: %{
-          conn_hash() => conn_t()
+          (context :: binary()) => %{
+            gvks: [map],
+            waiting: [pid()]
+          }
         }
 
   # seconds
@@ -27,24 +23,16 @@ defmodule KinoK8s.ResourceGVKCache do
   Initializes the the cache for the cluster defined by the given `conn`.
   The connection map is hashed and the hash is returned.
   """
-  def init_cache(conn) do
-    conn_hash = hash(conn)
-    GenServer.cast(__MODULE__, {:add_conn, conn, conn_hash})
-    conn_hash
-  end
-
-  @doc """
-  Returns the connection for the given `conn_hash`.
-  """
-  def get_conn(conn_hash) do
-    GenServer.call(__MODULE__, {:get_conn, conn_hash})
+  def init_cache(context) do
+    GenServer.cast(__MODULE__, {:add_conn, context})
+    :ok
   end
 
   @doc """
   Returns the resources (GVK) for the given connection.
   """
-  def get_gvks(conn_hash) do
-    GenServer.call(__MODULE__, {:get_gvks, conn_hash})
+  def get_gvks(context) do
+    GenServer.call(__MODULE__, {:get_gvks, context})
   end
 
   @impl true
@@ -53,62 +41,84 @@ defmodule KinoK8s.ResourceGVKCache do
   end
 
   @impl true
-  def handle_info({:update, conn_hash}, state) do
-    load_gvks(get_in(state, [conn_hash, :conn]), conn_hash, self())
-    Process.send_after(self(), {:update, conn_hash}, @update_frequency * 1000)
+  def handle_info({:update, context}, state) do
+    load_gvks(context, self())
+    Process.send_after(self(), {:update, context}, @update_frequency * 1000)
     {:noreply, state}
   end
 
   @impl true
-  def handle_cast({:gvks, conn_hash, gvks}, state) do
-    for pid <- get_in(state, [conn_hash, :waiting]), do: GenServer.reply(pid, gvks)
-    {:noreply, put_in(state, [conn_hash, :gvks], gvks)}
+  def handle_cast({:gvks, context, gvks}, state) do
+    for pid <- get_in(state[context].waiting), do: GenServer.reply(pid, gvks)
+    {:noreply, put_in(state[context].gvks, gvks)}
   end
 
-  def handle_cast({:add_conn, _conn, conn_hash}, state) when is_map_key(state, conn_hash) do
+  def handle_cast({:add_conn, context}, state) when is_map_key(state, context) do
     {:noreply, state}
   end
 
-  def handle_cast({:add_conn, conn, conn_hash}, state) do
-    send(self(), {:update, conn_hash})
-    {:noreply, Map.put(state, conn_hash, %{conn: conn, gvks: [], waiting: []})}
+  def handle_cast({:add_conn, context}, state) do
+    send(self(), {:update, context})
+    {:noreply, Map.put(state, context, %{gvks: [], waiting: []})}
   end
 
   @impl true
-  def handle_call({:get_gvks, conn_hash}, from, %{gvks: []} = state) do
-    new_state = update_in(state, [conn_hash, :waiting], fn waiting -> [from | waiting] end)
+  def handle_call({:get_gvks, context}, from, %{gvks: []} = state) do
+    new_state = update_in(state[context].waiting, fn waiting -> [from | waiting] end)
     {:noreply, new_state}
   end
 
-  def handle_call({:get_gvks, conn_hash}, _from, state) do
-    {:reply, get_in(state, [conn_hash, :gvks]) || [], state}
+  def handle_call({:get_gvks, context}, _from, state) do
+    {:reply, get_in(state[context].gvks) || [], state}
   end
 
-  def handle_call({:get_conn, conn_hash}, _from, state) do
-    {:reply, get_in(state, [conn_hash, :conn]), state}
-  end
-
-  defp load_gvks(conn, conn_hash, pid) do
+  defp load_gvks(context, pid) do
     spawn_link(fn ->
-      {:ok, api_versions} = K8s.Discovery.versions(conn)
+      resp =
+        Req.new()
+        |> Kubereq.attach(context: context, resource_path: nil)
+        |> Req.get!(url: "/apis", operation: nil)
 
-      result =
-        for api_version <- api_versions,
-            {:ok, gvks} = K8s.Discovery.resources(api_version, conn),
-            gvk <- gvks,
-            not String.contains?(gvk["name"], "/") do
-          %{
-            "index" => "#{String.replace(api_version, "/", "")}#{gvk["name"]}",
-            "api_version" => api_version,
-            "name" => gvk["name"],
-            "kind" => gvk["kind"],
-            "namespaced" => gvk["namespaced"]
-          }
+      gvks =
+        for group <- resp.body["groups"],
+            version <- group["versions"],
+            api_version = version["groupVersion"],
+            gvk <- resources("apis/#{api_version}", context) do
+          Map.merge(gvk, %{
+            "index" => String.replace(api_version, "/", "") <> gvk["name"],
+            "api_version" => api_version
+          })
         end
 
-      GenServer.cast(pid, {:gvks, conn_hash, result})
+      resp =
+        Req.new()
+        |> Kubereq.attach(context: context, resource_path: nil)
+        |> Req.get!(url: "/api", operation: nil)
+
+      gvks =
+        for api_version <- resp.body["versions"],
+            gvk <- resources("api/#{api_version}", context),
+            reduce: gvks do
+          gvks ->
+            gvk =
+              Map.merge(gvk, %{
+                "index" => api_version <> gvk["name"],
+                "api_version" => api_version
+              })
+
+            [gvk | gvks]
+        end
+
+      GenServer.cast(pid, {:gvks, context, gvks})
     end)
   end
 
-  def hash(conn), do: :erlang.phash2(conn)
+  defp resources(path, context) do
+    resp =
+      Req.new()
+      |> Kubereq.attach(context: context, resource_path: nil)
+      |> Req.get!(url: path, operation: nil)
+
+    resp.body["resources"]
+  end
 end
