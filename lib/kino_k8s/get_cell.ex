@@ -10,39 +10,60 @@ defmodule KinoK8s.GetCell do
   alias KinoK8s.K8sHelper
 
   @default_request_type "get"
-  @request_types ["get", "list", "watch"]
+  @read_request_types ["get", "list", "watch"]
+  @write_request_types ["apply", "create", "update"]
 
+  @default_body """
+  kind: ConfigMap
+  apiVersion: v1
+  metadata:
+    name: kino-k8s-cm
+    namespace: default
+  data:
+    key: default\
+  """
   @impl true
-  def init(fields, ctx) do
+  def init(attrs, ctx) do
     kubeconfig = Kubereq.Kubeconfig.load(Kubereq.Kubeconfig.Default)
 
     fields = %{
-      "result_variable" => Kino.SmartCell.prefixed_var_name("result", fields["result_variable"]),
+      "result_variable" => Kino.SmartCell.prefixed_var_name("result", attrs["result_variable"]),
       "contexts" => Enum.map(kubeconfig.contexts, & &1["name"]),
-      "context" => fields["context"] || kubeconfig.current_context,
-      "request_types" => @request_types,
-      "request_type" => fields["request_type"] || @default_request_type,
-      "gvk" => fields["gvk"],
-      "namespaces" => fields["namespaces"],
-      "namespace" => fields["namespace"],
-      "resources" => fields["resources"],
-      "resource" => fields["resource"]
+      "context" => attrs["context"] || kubeconfig.current_context,
+      "request_types" => @read_request_types ++ @write_request_types,
+      "request_type" => attrs["request_type"] || @default_request_type,
+      "gvk" => attrs["gvk"],
+      "namespaces" => attrs["namespaces"],
+      "namespace" => attrs["namespace"],
+      "resources" => attrs["resources"],
+      "resource" => attrs["resource"]
     }
 
     ctx =
       assign(ctx,
         req: Req.new() |> Kubereq.attach(kubeconfig: kubeconfig),
-        fields: fields
+        fields: fields,
+        body: attrs["body"] || @default_body
       )
       |> update_field("context")
 
-    {:ok, ctx}
+    {:ok, ctx,
+     editor: [
+       source: ctx.assigns.body,
+       language: "yaml",
+       visible: fields["request_type"] in @write_request_types
+     ]}
   end
 
   @impl true
   def handle_connect(ctx) do
     payload = %{fields: ctx.assigns.fields}
     {:ok, payload, ctx}
+  end
+
+  @impl true
+  def handle_editor_change(source, ctx) do
+    {:ok, assign(ctx, body: source)}
   end
 
   @impl true
@@ -55,7 +76,11 @@ defmodule KinoK8s.GetCell do
     {:noreply, ctx}
   end
 
-  defp update_field(ctx, "request_type"), do: ctx
+  defp update_field(ctx, "request_type") do
+    reconfigure_smart_cell(ctx,
+      editor: [visible: ctx.assigns.fields["request_type"] in @write_request_types]
+    )
+  end
 
   defp update_field(ctx, "context") do
     ResourceGVKCache.init_cache(ctx.assigns.fields["context"])
@@ -135,9 +160,9 @@ defmodule KinoK8s.GetCell do
         send_event(ctx, ctx.origin, "update", %{
           "fields" => %{"search_result_items" => search_result_items, "gvk" => nil}
         })
-    end
 
-    ctx
+        ctx
+    end
   end
 
   defp update_field(ctx, _field), do: ctx
@@ -148,8 +173,8 @@ defmodule KinoK8s.GetCell do
   end
 
   @impl true
-  def to_attrs(%{assigns: %{fields: fields}}) do
-    Map.take(fields, ["request_type", "result_variable", "gvk", "resource", "namespace"])
+  def to_attrs(%{assigns: assigns}) do
+    Map.put(assigns.fields, "body", assigns.body)
   end
 
   @impl true
@@ -159,6 +184,7 @@ defmodule KinoK8s.GetCell do
         "get" -> ["result_variable", "gvk", "resource", "namespace"]
         "list" -> ["result_variable", "gvk"]
         "watch" -> ["result_variable", "gvk"]
+        type when type in @write_request_types -> ["result_variable", "body"]
       end
 
     if all_fields_filled?(attrs, required_keys) do
@@ -176,7 +202,7 @@ defmodule KinoK8s.GetCell do
 
   defp to_quoted(%{"request_type" => "get"} = attrs) do
     quote do
-      unquote(quoted_req(attrs))
+      req = unquote(quoted_req(attrs))
 
       %{body: unquote(quoted_var(attrs["result_variable"]))} =
         Kubereq.get!(req, unquote(attrs["namespace"]), unquote(attrs["resource"]))
@@ -187,7 +213,7 @@ defmodule KinoK8s.GetCell do
 
   defp to_quoted(%{"request_type" => "list"} = attrs) do
     quote do
-      unquote(quoted_req(attrs))
+      req = unquote(quoted_req(attrs))
 
       %{body: unquote(quoted_var(attrs["result_variable"]))} =
         Kubereq.list!(req, unquote(attrs["namespace"]))
@@ -205,7 +231,7 @@ defmodule KinoK8s.GetCell do
 
   defp to_quoted(%{"request_type" => "watch"} = attrs) do
     quote do
-      unquote(quoted_req(attrs))
+      req = unquote(quoted_req(attrs))
 
       %{body: unquote(quoted_var(attrs["result_variable"]))} =
         Kubereq.watch!(req, unquote(attrs["namespace"]))
@@ -214,15 +240,36 @@ defmodule KinoK8s.GetCell do
     end
   end
 
+  defp to_quoted(%{"request_type" => type} = attrs) when type in @write_request_types do
+    body_ast = {:sigil_y, [delimiter: ~S["""]], [{:<<>>, [], [attrs["body"] <> "\n"]}, []]}
+
+    function =
+      case type do
+        "apply" -> quote do: Kubereq.apply!(body)
+        "create" -> quote do: Kubereq.create!(body)
+        "update" -> quote do: Kubereq.update!(body)
+      end
+
+    quote do
+      import YamlElixir.Sigil
+      body = unquote(body_ast)
+
+      %{body: unquote(quoted_var(attrs["result_variable"]))} =
+        unquote(quoted_req(attrs))
+        |> unquote(function)
+
+      Kino.Tree.new(unquote(quoted_var(attrs["result_variable"])))
+    end
+  end
+
   defp quoted_req(attrs) do
     quote do
-      req =
-        Req.new()
-        |> Kubereq.attach(
-          context: unquote(attrs["context"]),
-          api_version: unquote(attrs["gvk"]["api_version"]),
-          kind: unquote(attrs["gvk"]["kind"])
-        )
+      Req.new()
+      |> Kubereq.attach(
+        context: unquote(attrs["context"]),
+        api_version: unquote(attrs["gvk"]["api_version"]),
+        kind: unquote(attrs["gvk"]["kind"])
+      )
     end
   end
 

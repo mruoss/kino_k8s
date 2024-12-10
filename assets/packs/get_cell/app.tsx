@@ -10,8 +10,11 @@ import Select from '../../shared/select'
 import SelectOrInput from '../../shared/select_or_input'
 import { GVK } from '../../shared/types'
 import { GetCellFields } from './types'
+import ReadRequestForm from './read_request_form'
 
-interface AppProps {
+const READ_REQUEST_TYPES = ['get', 'list', 'watch']
+
+export interface AppProps {
   payload: { fields: GetCellFields }
   ctx: KinoContext
 }
@@ -53,45 +56,9 @@ const App: React.FC<AppProps> = ({ payload, ctx }) => {
             orientation="vert"
           />
         </div>
-        <div className="flex gap-x-5 p-3">
-          <SearchSelect<GVK>
-            className="max-w-full"
-            name="gvk"
-            label="Resource Kind"
-            onSearch={updateField('search_term')}
-            searchTerm={fields.search_term}
-            resultItemsKeyField={'index'}
-            resultItems={fields.search_result_items}
-            onSelect={updateField('gvk')}
-            itemRenderer={(item: GVK) => <GVKOption gvk={item} />}
-            selectedValue={fields.gvk?.kind}
-            placeholder="apps/v1 Deployment"
-          />
-          {fields.namespaces && (
-            <SelectOrInput
-              name="namespace"
-              label="Namespace"
-              options={fields.namespaces.map((ns) => ({
-                label: ns,
-                value: ns,
-              }))}
-              selectedOption={fields.namespace}
-              onChange={updateField('namespace')}
-            />
-          )}
-          {fields.resources && (
-            <SelectOrInput
-              name="resource"
-              label="Resource Name"
-              options={fields.resources.map((ns) => ({
-                label: ns,
-                value: ns,
-              }))}
-              selectedOption={fields.resource}
-              onChange={updateField('resource')}
-            />
-          )}
-        </div>
+        {READ_REQUEST_TYPES.includes(fields.request_type) && (
+          <ReadRequestForm fields={fields} updateField={updateField} />
+        )}
       </div>
     </>
   )

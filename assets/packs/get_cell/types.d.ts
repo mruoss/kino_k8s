@@ -1,3 +1,4 @@
+import { KinoContext } from '../../shared/kino'
 import { Fields, GVK } from '../../shared/types'
 
 export interface GetCellFields extends Fields {
