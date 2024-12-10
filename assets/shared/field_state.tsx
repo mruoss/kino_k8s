@@ -13,7 +13,7 @@ const useFieldsState = <FieldsType extends object>(
   const updateField: UpdateFieldFun<FieldsType> =
     (fieldName) => (fieldValue) => {
       setFields((fields) => ({ ...fields, [fieldName]: fieldValue }))
-      console.log('Pushing ${fieldName} to server', fieldValue)
+      console.log(`Pushing ${fieldName} to server`, fieldValue)
       ctx.pushEvent('update_field', { field: fieldName, value: fieldValue })
     }
 
