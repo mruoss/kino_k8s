@@ -1,7 +1,7 @@
 import React from 'react'
 import { KinoContext } from './kino'
 
-type UpdateFieldFun<FieldsType> = (
+export type UpdateFieldFun<FieldsType> = (
   fieldName: string,
 ) => (FieldValue: FieldsType[keyof FieldsType]) => void
 
