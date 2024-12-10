@@ -3,15 +3,18 @@ defmodule KinoK8s.GetCell do
 
   use Kino.JS, assets_path: "lib/assets/get_cell/build"
   use Kino.JS.Live
-  use Kino.SmartCell, name: "K8s - Get / List / Watch Resources"
+  use Kino.SmartCell, name: "Kubernetes Client"
 
   alias KinoK8s.SmartCellHelper
   alias KinoK8s.ResourceGVKCache
   alias KinoK8s.K8sHelper
 
-  @default_request_type "get"
-  @read_request_types ["get", "list", "watch"]
-  @write_request_types ["apply", "create", "update"]
+  @default_operation "get"
+  @read_operations ["get", "list", "watch"]
+  @write_operations ["apply", "create", "update"]
+  @connect_operations ["exec", "logs"]
+  @single_resource_operations ["get", "exec", "logs"]
+  @gvk_pod %{"api_version" => "v1", "kind" => "Pod", "namespaced" => true}
 
   @default_body """
   kind: ConfigMap
@@ -26,15 +29,21 @@ defmodule KinoK8s.GetCell do
   def init(attrs, ctx) do
     kubeconfig = Kubereq.Kubeconfig.load(Kubereq.Kubeconfig.Default)
 
+    namespace =
+      case attrs["namespace"] do
+        nil -> "__ALL__"
+        other -> other
+      end
+
     fields = %{
       "result_variable" => Kino.SmartCell.prefixed_var_name("result", attrs["result_variable"]),
       "contexts" => Enum.map(kubeconfig.contexts, & &1["name"]),
       "context" => attrs["context"] || kubeconfig.current_context,
-      "request_types" => @read_request_types ++ @write_request_types,
-      "request_type" => attrs["request_type"] || @default_request_type,
+      "operations" => @read_operations ++ @write_operations ++ @connect_operations,
+      "operation" => attrs["operation"] || @default_operation,
       "gvk" => attrs["gvk"],
       "namespaces" => attrs["namespaces"],
-      "namespace" => attrs["namespace"],
+      "namespace" => namespace,
       "resources" => attrs["resources"],
       "resource" => attrs["resource"]
     }
@@ -51,7 +60,7 @@ defmodule KinoK8s.GetCell do
      editor: [
        source: ctx.assigns.body,
        language: "yaml",
-       visible: fields["request_type"] in @write_request_types
+       visible: fields["operation"] in @write_operations
      ]}
   end
 
@@ -76,18 +85,27 @@ defmodule KinoK8s.GetCell do
     {:noreply, ctx}
   end
 
-  defp update_field(ctx, "request_type") do
-    reconfigure_smart_cell(ctx,
-      editor: [visible: ctx.assigns.fields["request_type"] in @write_request_types]
-    )
+  defp update_field(ctx, "operation") do
+    operation = ctx.assigns.fields["operation"]
+
+    ctx =
+      if operation in @connect_operations do
+        ctx
+        |> broadcast_update(%{"gvk" => @gvk_pod})
+        |> update_field("gvk")
+      else
+        ctx
+      end
+
+    reconfigure_smart_cell(ctx, editor: [visible: operation in @write_operations])
   end
 
   defp update_field(ctx, "context") do
-    ResourceGVKCache.init_cache(ctx.assigns.fields["context"])
+    context = ctx.assigns.fields["context"]
+    ctx = update_in(ctx.assigns.req, &Req.merge(&1, context: context))
+    ResourceGVKCache.init_cache(context)
 
-    ctx
-    |> broadcast_update(%{"gvk" => nil})
-    |> update_field("gvk")
+    update_field(ctx, "gvk")
   end
 
   defp update_field(ctx, "gvk") do
@@ -112,7 +130,7 @@ defmodule KinoK8s.GetCell do
               []
 
             namespaces ->
-              if ctx.assigns.fields["request_type"] == "get",
+              if ctx.assigns.fields["operation"] in @single_resource_operations,
                 do: namespaces,
                 else: ["__ALL__" | namespaces]
           end)
@@ -126,10 +144,10 @@ defmodule KinoK8s.GetCell do
   defp update_field(ctx, "namespace") do
     namespace = ctx.assigns.fields["namespace"]
     gvk = ctx.assigns.fields["gvk"]
-    request_type = ctx.assigns.fields["request_type"]
+    operation = ctx.assigns.fields["operation"]
     resource = ctx.assigns.fields["resource"]
 
-    if is_nil(namespace) or request_type != "get" do
+    if is_nil(namespace) or operation not in @single_resource_operations do
       broadcast_update(ctx, %{"resources" => nil, "resource" => ""})
     else
       with {:ok, resources} <-
@@ -174,25 +192,27 @@ defmodule KinoK8s.GetCell do
 
   @impl true
   def to_attrs(%{assigns: assigns}) do
-    Map.put(assigns.fields, "body", assigns.body)
+    assigns.fields
+    |> Map.put("body", assigns.body)
+    |> Map.update!("namespace", fn
+      "__ALL__" -> nil
+      other -> other
+    end)
   end
 
   @impl true
   def to_source(attrs) do
     required_keys =
-      case attrs["request_type"] do
+      case attrs["operation"] do
         "get" -> ["result_variable", "gvk", "resource", "namespace"]
         "list" -> ["result_variable", "gvk"]
         "watch" -> ["result_variable", "gvk"]
-        type when type in @write_request_types -> ["result_variable", "body"]
+        type when type in @write_operations -> ["result_variable", "body"]
+        type when type in @connect_operations -> ["resource", "namespace"]
       end
 
     if all_fields_filled?(attrs, required_keys) do
       attrs
-      |> Map.update!("namespace", fn
-        "__ALL__" -> nil
-        other -> other
-      end)
       |> to_quoted()
       |> Kino.SmartCell.quoted_to_string()
     else
@@ -200,7 +220,7 @@ defmodule KinoK8s.GetCell do
     end
   end
 
-  defp to_quoted(%{"request_type" => "get"} = attrs) do
+  defp to_quoted(%{"operation" => "get"} = attrs) do
     quote do
       req = unquote(quoted_req(attrs))
 
@@ -211,7 +231,7 @@ defmodule KinoK8s.GetCell do
     end
   end
 
-  defp to_quoted(%{"request_type" => "list"} = attrs) do
+  defp to_quoted(%{"operation" => "list"} = attrs) do
     quote do
       req = unquote(quoted_req(attrs))
 
@@ -229,7 +249,7 @@ defmodule KinoK8s.GetCell do
     end
   end
 
-  defp to_quoted(%{"request_type" => "watch"} = attrs) do
+  defp to_quoted(%{"operation" => "watch"} = attrs) do
     quote do
       req = unquote(quoted_req(attrs))
 
@@ -240,7 +260,7 @@ defmodule KinoK8s.GetCell do
     end
   end
 
-  defp to_quoted(%{"request_type" => type} = attrs) when type in @write_request_types do
+  defp to_quoted(%{"operation" => type} = attrs) when type in @write_operations do
     body_ast = {:sigil_y, [delimiter: ~S["""]], [{:<<>>, [], [attrs["body"] <> "\n"]}, []]}
 
     function =
@@ -259,6 +279,55 @@ defmodule KinoK8s.GetCell do
         |> unquote(function)
 
       Kino.Tree.new(unquote(quoted_var(attrs["result_variable"])))
+    end
+  end
+
+  defp to_quoted(%{"operation" => type} = attrs) when type in @connect_operations do
+    connect =
+      case type do
+        "logs" ->
+          quote do
+            fn into ->
+              req = unquote(quoted_req(attrs))
+
+              Kino.start_child!({
+                Kubereq.PodLogs,
+                req: req,
+                into: into,
+                namespace: unquote(attrs["namespace"]),
+                name: unquote(attrs["resource"])
+                # TODO: container: "main-container"
+              })
+
+              &Function.identity/1
+            end
+          end
+
+        "exec" ->
+          quote do
+            fn into ->
+              req = unquote(quoted_req(attrs))
+
+              dest =
+                Kino.start_child!({
+                  Kubereq.PodExec,
+                  # TODO: container: "main",
+                  req: req,
+                  namespace: unquote(attrs["namespace"]),
+                  name: unquote(attrs["resource"]),
+                  into: into,
+                  command: ["/bin/sh"],
+                  tty: true
+                })
+
+              &Kubereq.PodExec.send_stdin(dest, &1)
+            end
+          end
+      end
+
+    quote do
+      connect = unquote(connect)
+      KinoK8s.KinoTerminal.open(connect)
     end
   end
 
