@@ -1,4 +1,4 @@
-defmodule KinoK8s.GetCell do
+defmodule KinoK8s.KubernetesClientCell do
   @moduledoc false
 
   use Kino.JS, assets_path: "lib/assets/get_cell/build"
@@ -29,12 +29,6 @@ defmodule KinoK8s.GetCell do
   def init(attrs, ctx) do
     kubeconfig = Kubereq.Kubeconfig.load(Kubereq.Kubeconfig.Default)
 
-    namespace =
-      case attrs["namespace"] do
-        nil -> "__ALL__"
-        other -> other
-      end
-
     fields = %{
       "result_variable" => Kino.SmartCell.prefixed_var_name("result", attrs["result_variable"]),
       "contexts" => Enum.map(kubeconfig.contexts, & &1["name"]),
@@ -43,7 +37,7 @@ defmodule KinoK8s.GetCell do
       "operation" => attrs["operation"] || @default_operation,
       "gvk" => attrs["gvk"],
       "namespaces" => attrs["namespaces"],
-      "namespace" => namespace,
+      "namespace" => attrs["namespace"],
       "resources" => attrs["resources"],
       "resource" => attrs["resource"]
     }
@@ -66,7 +60,7 @@ defmodule KinoK8s.GetCell do
 
   @impl true
   def handle_connect(ctx) do
-    payload = %{fields: ctx.assigns.fields}
+    payload = %{fields: ctx.assigns.fields, connection_state: %{"state" => "ok"}}
     {:ok, payload, ctx}
   end
 
@@ -78,12 +72,45 @@ defmodule KinoK8s.GetCell do
   @impl true
   def handle_event("update_field", %{"field" => field, "value" => value}, ctx) do
     ctx =
-      ctx
-      |> update(:fields, &Map.merge(&1, %{field => value}))
-      |> update_field(field)
+      case validate_update_field(ctx, field, value) do
+        :ok ->
+          ctx
+          |> broadcast_update(%{field => value})
+          |> update_field(field)
+
+        :error ->
+          ctx
+      end
 
     {:noreply, ctx}
   end
+
+  defp validate_update_field(ctx, "context", context) do
+    send_event(ctx, ctx.origin, "connectionState", %{"state" => "loading"})
+
+    if Kubereq.can_i?(
+         ctx.assigns.req,
+         [
+           verb: "create",
+           version: "authorization.k8s.io/v1",
+           resource: "selfsubjectaccessreviews"
+         ],
+         context: context
+       ) do
+      send_event(ctx, ctx.origin, "connectionState", %{"state" => "ok"})
+      :ok
+    else
+      send_event(ctx, ctx.origin, "connectionState", %{
+        "message" =>
+          ~s(Failed to establish a connection to the cluster of the context "#{context}"),
+        "state" => "error"
+      })
+
+      :error
+    end
+  end
+
+  defp validate_update_field(_ctx, _field, _value), do: :ok
 
   defp update_field(ctx, "operation") do
     operation = ctx.assigns.fields["operation"]
@@ -94,7 +121,10 @@ defmodule KinoK8s.GetCell do
         |> broadcast_update(%{"gvk" => @gvk_pod})
         |> update_field("gvk")
       else
-        ctx
+        update_field(
+          ctx,
+          "gvk"
+        )
       end
 
     reconfigure_smart_cell(ctx, editor: [visible: operation in @write_operations])
@@ -103,8 +133,8 @@ defmodule KinoK8s.GetCell do
   defp update_field(ctx, "context") do
     context = ctx.assigns.fields["context"]
     ctx = update_in(ctx.assigns.req, &Req.merge(&1, context: context))
-    ResourceGVKCache.init_cache(context)
 
+    ResourceGVKCache.init_cache(context)
     update_field(ctx, "gvk")
   end
 
@@ -194,10 +224,6 @@ defmodule KinoK8s.GetCell do
   def to_attrs(%{assigns: assigns}) do
     assigns.fields
     |> Map.put("body", assigns.body)
-    |> Map.update!("namespace", fn
-      "__ALL__" -> nil
-      other -> other
-    end)
   end
 
   @impl true
@@ -232,6 +258,12 @@ defmodule KinoK8s.GetCell do
   end
 
   defp to_quoted(%{"operation" => "list"} = attrs) do
+    attrs =
+      Map.update!(attrs, "namespace", fn
+        "__ALL__" -> nil
+        other -> other
+      end)
+
     quote do
       req = unquote(quoted_req(attrs))
 
@@ -243,13 +275,20 @@ defmodule KinoK8s.GetCell do
       unquote(quoted_var(attrs["result_variable"]))["items"]
       |> Enum.map(&Map.take(&1["metadata"], keys))
       |> Kino.DataTable.new(
-        name: unquote(quoted_var(attrs["result_variable"]))["kind"],
+        name:
+          "#{unquote(quoted_var(attrs["result_variable"]))["kind"]} (ResourceVersion: #{unquote(quoted_var(attrs["result_variable"]))["metadata"]["resourceVersion"]})",
         keys: keys
       )
     end
   end
 
   defp to_quoted(%{"operation" => "watch"} = attrs) do
+    attrs =
+      Map.update!(attrs, "namespace", fn
+        "__ALL__" -> nil
+        other -> other
+      end)
+
     quote do
       req = unquote(quoted_req(attrs))
 

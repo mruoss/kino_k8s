@@ -36,10 +36,10 @@ const ReadOperationForm: React.FC<{
         onChange={updateField('namespace')}
       />
     )}
-    {fields.resources && (
+    {fields.gvk && fields.resources && (
       <SelectOrInput
         name="resource"
-        label={fields.gvk.kind}
+        label={fields.gvk?.kind}
         options={fields.resources.map((ns) => ({
           label: ns,
           value: ns,
