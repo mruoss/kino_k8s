@@ -30,7 +30,7 @@ defmodule KinoK8s.SmartCellHelper do
 
     namespace =
       if !is_nil(ctx.assigns.fields["namespace"]) and
-           ctx.assigns.fields["namespace"] in namespaces do
+           ctx.assigns.fields["namespace"] in ["__ALL__" | namespaces] do
         ctx.assigns.fields["namespace"]
       else
         req.options.kubeconfig.current_namespace || List.first(namespaces)

@@ -6,11 +6,11 @@ import { createRoot } from 'react-dom/client'
 import Error from '../../shared/error'
 import { KinoContext } from '../../shared/kino'
 import App from './app'
-import { GetCellFields } from './types'
+import { ConnectionState, GetCellFields } from './types'
 
 export const init = async (
   ctx: KinoContext,
-  payload: { fields: GetCellFields },
+  payload: { fields: GetCellFields; connection_state: ConnectionState },
 ): Promise<void> => {
   ctx.root.innerHTML = 'loading...'
   ctx.importCSS('main.css')

@@ -54,8 +54,7 @@ defmodule KinoK8s.KinoTerminal do
     {:noreply, assign(ctx, send_to_process: nil, buffer: [])}
   end
 
-  def handle_info(other_msg, ctx) do
-    dbg(other_msg)
+  def handle_info(_other_msg, ctx) do
     {:noreply, ctx}
   end
 

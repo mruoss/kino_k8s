@@ -16,12 +16,10 @@ defmodule KinoK8s.K8sHelper do
 
   def pods(conn, namespace), do: resources(conn, "v1", "pod", namespace)
 
-  def containers(conn, namespace, pod) do
-    with {:ok, pod} <-
-           K8s.Client.get("v1", "pod", namespace: namespace, name: pod)
-           |> K8s.Client.put_conn(conn)
-           |> K8s.Client.run() do
-      {:ok, get_in(pod, ["spec", "containers", Access.all(), "name"])}
+  def containers(req, namespace, name) do
+    with {:ok, %{status: 200, body: body}} <-
+           Kubereq.get(req, namespace, name, api_version: "v1", kind: "Pod") do
+      {:ok, get_in(body, ["spec", "containers", Access.all(), "name"])}
     end
   end
 end

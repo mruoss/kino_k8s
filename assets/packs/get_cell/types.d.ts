@@ -3,8 +3,6 @@ import { Fields, GVK } from '../../shared/types'
 export interface GetCellFields extends Fields {
   contexts: string[]
   context: string
-  connection?: { variable: string }
-  connections: { variable: string }[]
   operation: string
   operations: string[]
   result_type: string
@@ -16,4 +14,9 @@ export interface GetCellFields extends Fields {
   namespace: string
   resources?: [string]
   resource?: string
+}
+
+export interface ConnectionState {
+  message?: string
+  state: 'error' | 'loading' | 'ok'
 }

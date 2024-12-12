@@ -10,6 +10,7 @@ type SelectProps = {
   onChange: (option: string) => void
   className?: string
   orientation?: 'horiz' | 'vert'
+  error?: string
 }
 
 const Select = ({
@@ -18,6 +19,7 @@ const Select = ({
   options,
   selectedOption,
   onChange,
+  error,
   className = '',
   orientation = 'vert',
 }: SelectProps) => (
@@ -61,6 +63,7 @@ const Select = ({
         <RiArrowDownSLine size={16} />
       </div>
     </div>
+    {error && <span className="text-sm text-red-500">{error}</span>}
   </div>
 )
 
