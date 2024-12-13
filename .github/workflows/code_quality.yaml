@@ -46,3 +46,9 @@ jobs:
 
       - name: Compile
         run: mix compile --warnings-as-errors
+
+      - name: Build frontend
+        run: |
+          cd assets
+          npm ci
+          npm run build

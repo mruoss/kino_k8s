@@ -14,7 +14,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## Changed
 
-Use [`@livebook/kino-bundler`](https://github.com/livebook-dev/kino-bundler) to bundle the JS/CSS. [#365](https://github.com/mruoss/kino_k8s/pull/365)
+* Use [`@livebook/kino-bundler`](https://github.com/livebook-dev/kino-bundler) to bundle the JS/CSS. [#365](https://github.com/mruoss/kino_k8s/pull/365)
+* Switch Kubernetes Client to [`kubereq`](https://github.com/mruoss/kubereq) - [#398](https://github.com/mruoss/kino_k8s/pull/398)
+* Consolidate all smart cells into a single cell - [#398](https://github.com/mruoss/kino_k8s/pull/398)
 
 ## [1.2.4] - 2024-08-21
 
