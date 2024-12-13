@@ -34,7 +34,7 @@ defmodule KinoK8s.MixProject do
   defp deps do
     [
       {:ex_doc, ">= 0.0.0", only: :dev, runtime: false},
-      {:kubereq, path: "/Users/mruoss/src/community/kubereq"},
+      {:kubereq, "~> 0.4.0"},
       {:kino, "~> 0.14.0"},
       {:ymlr, "~> 5.0"}
     ]

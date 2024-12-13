@@ -3,9 +3,5 @@
   "editor.formatOnSave": true,
   "editor.codeActionsOnSave": {
     "source.organizeImports": "explicit"
-  },
-  "playwright.env": {
-    "KUBECONTEXT": "kind-kino-k8s",
-    "KUBECONFIG": "~/.kube/config"
   }
 }
