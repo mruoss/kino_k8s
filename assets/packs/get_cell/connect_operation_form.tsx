@@ -11,6 +11,21 @@ const ConnectOperationForm: React.FC<{
   updateField: UpdateFieldFun<GetCellFields>
 }> = ({ fields, updateField }) => (
   <div className="flex gap-x-5 p-3">
+    <SearchSelect<GVK>
+      className="opacity-60"
+      name="gvk"
+      label="Resource Kind"
+      onSearch={updateField('search_term')}
+      searchTerm={fields.search_term}
+      resultItemsKeyField={'index'}
+      resultItems={fields.search_result_items}
+      onSelect={updateField('gvk')}
+      itemRenderer={(item: GVK) => <GVKOption gvk={item} />}
+      selectedValue={fields.gvk?.kind}
+      placeholder="apps/v1 Deployment"
+      disabled={true}
+    />
+
     {fields.namespaces && (
       <SelectOrInput
         name="namespace"
@@ -27,12 +42,24 @@ const ConnectOperationForm: React.FC<{
       <SelectOrInput
         name="resource"
         label={fields.gvk.kind}
-        options={fields.resources.map((ns) => ({
-          label: ns,
-          value: ns,
+        options={fields.resources.map((resource) => ({
+          label: resource,
+          value: resource,
         }))}
         selectedOption={fields.resource}
         onChange={updateField('resource')}
+      />
+    )}
+    {fields.containers && (
+      <SelectOrInput
+        name="container"
+        label="Container"
+        options={fields.containers.map((container) => ({
+          label: container,
+          value: container,
+        }))}
+        selectedOption={fields.container}
+        onChange={updateField('container')}
       />
     )}
   </div>
