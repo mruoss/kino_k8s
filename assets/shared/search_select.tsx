@@ -8,6 +8,7 @@ type SearchInputProps = {
   searchTerm: string
   onSearch: (searchTerm: string) => void
   placeholder?: string
+  disabled?: boolean
 }
 
 const SearchInput: React.FC<SearchInputProps> = ({
@@ -16,6 +17,7 @@ const SearchInput: React.FC<SearchInputProps> = ({
   searchTerm,
   onSearch,
   placeholder,
+  disabled = false,
 }: SearchInputProps) => {
   const performSearch = debounce((searchTerm) => {
     onSearch(searchTerm.toLowerCase())
@@ -61,6 +63,7 @@ const SearchInput: React.FC<SearchInputProps> = ({
           type="text"
           value={localSearchTerm}
           name={name}
+          disabled={disabled}
           autoComplete="off"
           placeholder={placeholder}
           onInput={(e: React.ChangeEvent<HTMLInputElement>) => {
@@ -104,7 +107,7 @@ const SearchResult = <ItemType,>({
   )
 }
 
-type SearchSelectProps = { label: string; className: string }
+type SearchSelectProps = { label: string; className?: string }
 
 const SearchSelect = <ItemType,>({
   name,
@@ -114,10 +117,11 @@ const SearchSelect = <ItemType,>({
   resultItems,
   resultItemsKeyField,
   itemRenderer,
-  className,
+  className = '',
   onSelect,
   selectedValue,
   placeholder,
+  disabled = false,
 }: SearchInputProps & SearchResultProps<ItemType> & SearchSelectProps) => {
   return (
     <div className={className}>
@@ -130,6 +134,7 @@ const SearchSelect = <ItemType,>({
         searchTerm={searchTerm}
         selectedValue={selectedValue}
         placeholder={placeholder}
+        disabled={disabled}
       />
       {(resultItems && resultItems.length) > 0 && (
         <SearchResult

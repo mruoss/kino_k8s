@@ -25,6 +25,7 @@ defmodule KinoK8s.KubernetesClientCell do
   data:
     key: default\
   """
+
   @impl true
   def init(attrs, ctx) do
     kubeconfig = Kubereq.Kubeconfig.load(Kubereq.Kubeconfig.Default)
@@ -39,7 +40,9 @@ defmodule KinoK8s.KubernetesClientCell do
       "namespaces" => attrs["namespaces"],
       "namespace" => attrs["namespace"],
       "resources" => attrs["resources"],
-      "resource" => attrs["resource"]
+      "resource" => attrs["resource"],
+      "containers" => attrs["containers"],
+      "container" => attrs["container"]
     }
 
     ctx =
@@ -178,7 +181,9 @@ defmodule KinoK8s.KubernetesClientCell do
     resource = ctx.assigns.fields["resource"]
 
     if is_nil(namespace) or operation not in @single_resource_operations do
-      broadcast_update(ctx, %{"resources" => nil, "resource" => ""})
+      ctx
+      |> broadcast_update(%{"resources" => nil, "resource" => nil})
+      |> update_field("resource")
     else
       with {:ok, resources} <-
              K8sHelper.resources(ctx.assigns.req, gvk["api_version"], gvk["kind"], namespace) do
@@ -187,10 +192,14 @@ defmodule KinoK8s.KubernetesClientCell do
             do: resource,
             else: List.first(resources)
 
-        broadcast_update(ctx, %{"resources" => resources, "resource" => resource})
+        ctx
+        |> broadcast_update(%{"resources" => resources, "resource" => resource})
+        |> update_field("resource")
       else
         _other ->
-          broadcast_update(ctx, %{"resources" => [], "resource" => ""})
+          ctx
+          |> broadcast_update(%{"resources" => [], "resource" => nil})
+          |> update_field("resource")
       end
     end
   end
@@ -210,6 +219,23 @@ defmodule KinoK8s.KubernetesClientCell do
         })
 
         ctx
+    end
+  end
+
+  defp update_field(ctx, "resource") do
+    if not is_nil(ctx.assigns.fields["resource"]) and
+         ctx.assigns.fields["operation"] in @connect_operations do
+      {:ok, containers} =
+        K8sHelper.containers(
+          ctx.assigns.req,
+          ctx.assigns.fields["namespace"],
+          ctx.assigns.fields["resource"]
+        )
+
+      broadcast_update(ctx, %{"container" => List.first(containers), "containers" => containers})
+    else
+      broadcast_update(ctx, %{"container" => nil, "containers" => nil})
+      ctx
     end
   end
 
@@ -334,8 +360,8 @@ defmodule KinoK8s.KubernetesClientCell do
                 req: req,
                 into: into,
                 namespace: unquote(attrs["namespace"]),
-                name: unquote(attrs["resource"])
-                # TODO: container: "main-container"
+                name: unquote(attrs["resource"]),
+                container: unquote(attrs["container"])
               })
 
               &Function.identity/1
@@ -350,10 +376,10 @@ defmodule KinoK8s.KubernetesClientCell do
               dest =
                 Kino.start_child!({
                   Kubereq.PodExec,
-                  # TODO: container: "main",
                   req: req,
                   namespace: unquote(attrs["namespace"]),
                   name: unquote(attrs["resource"]),
+                  container: unquote(attrs["container"]),
                   into: into,
                   command: ["/bin/sh"],
                   tty: true

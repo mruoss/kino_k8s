@@ -14,6 +14,8 @@ export interface GetCellFields extends Fields {
   namespace: string
   resources?: [string]
   resource?: string
+  containers?: [string]
+  container?: string
 }
 
 export interface ConnectionState {
