@@ -14,7 +14,7 @@ A Livebook Kino for learning to use the k8s Elixir library.
 Install the latest 1.x version:
 
 ```elixir
-Mix.install([{:kino_k8s, "~> 1.0"}])
+Mix.install([{:kino_k8s, "~> 2.0"}])
 ```
 
 To install the latest from `main` branch:
@@ -25,16 +25,11 @@ Mix.install([{:kino_k8s, github: "mruoss/kino_k8s"}])
 
 ## Smart Cells
 
-`kino_k8s` brings the following Smart Cells to your [Livebook](https://livebook.dev):
+`kino_k8s` brings the **Kubernetes Client** Smart Cell to your
+[Livebook](https://livebook.dev). It lets you perform a set of operations on
+your Kubernetes cluster and learn how to work with the
+[`kubereq`](https://github.com/mruoss/kubereq) library
 
-- **Cluster Connection** - Connect to a Kubernetes Cluster
-- **Get / List / Watch Resources**
-- **Create / Update / Apply Resource** - Modify resources in your cluster
-- **Connect to Pod (Exec/Logs)** - Renders a terminal using xterm.js (Formerly `kino_k8s_term`).
-
-The smart cells require a connection to a Kubernetes Cluster in form of a
-`%K8s.Conn{}` object. To add such a connection to your Livebook, you can add
-the `Cluster Connection` smart cell before adding any other smart cells.
 
 ## Development
 
