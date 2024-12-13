@@ -30,5 +30,4 @@ kino_k8s-*.tar
 
 *.livemd_files
 /test-results/
-/playwright-report/
 /blob-report/

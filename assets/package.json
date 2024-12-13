@@ -6,7 +6,6 @@
   },
   "devDependencies": {
     "@livebook/kino-bundler": "^0.2.1",
-    "@playwright/test": "^1.39.0",
     "@remixicon/react": "^4.1.1",
     "@types/node": "^22.0.0",
     "@types/react": "^18.2.28",
