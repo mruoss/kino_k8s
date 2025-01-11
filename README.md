@@ -1,6 +1,6 @@
 # KinoK8s
 
-A Livebook Kino for learning to use the k8s Elixir library.
+A Livebook Kino for learning to use the kubereq Elixir library.
 
 [![Module Version](https://img.shields.io/hexpm/v/kino_k8s.svg)](https://hex.pm/packages/kino_k8s)
 [![Last Updated](https://img.shields.io/github/last-commit/mruoss/kino_k8s.svg)](https://github.com/mruoss/kino_k8s/commits/main)
