@@ -35,7 +35,7 @@ defmodule KinoK8s.MixProject do
     [
       {:ex_doc, ">= 0.0.0", only: :dev, runtime: false},
       {:kubereq, "~> 0.4.0"},
-      {:kino, "~> 0.14.0"},
+      {:kino, "~> 0.15.0"},
       {:ymlr, "~> 5.0"}
     ]
   end
