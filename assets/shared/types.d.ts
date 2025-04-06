@@ -5,6 +5,7 @@ export interface Fields {
 
 export interface GVK {
   kind: string
+  subresource: string
   name: string
   api_version: string
   index: string

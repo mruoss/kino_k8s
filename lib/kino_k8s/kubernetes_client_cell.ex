@@ -186,7 +186,13 @@ defmodule KinoK8s.KubernetesClientCell do
       |> update_field("resource")
     else
       with {:ok, resources} <-
-             K8sHelper.resources(ctx.assigns.req, gvk["api_version"], gvk["kind"], namespace) do
+             K8sHelper.resources(
+               ctx.assigns.req,
+               gvk["api_version"],
+               gvk["kind"],
+               namespace,
+               gvk["subresource"]
+             ) do
         resource =
           if resource in resources,
             do: resource,
@@ -397,13 +403,25 @@ defmodule KinoK8s.KubernetesClientCell do
   end
 
   defp quoted_req(attrs) do
-    quote do
-      Req.new()
-      |> Kubereq.attach(
-        context: unquote(attrs["context"]),
-        api_version: unquote(attrs["gvk"]["api_version"]),
-        kind: unquote(attrs["gvk"]["kind"])
-      )
+    if attrs["gvk"]["subresource"] do
+      quote do
+        Req.new()
+        |> Kubereq.attach(
+          context: unquote(attrs["context"]),
+          api_version: unquote(attrs["gvk"]["api_version"]),
+          kind: unquote(attrs["gvk"]["kind"]),
+          subresource: unquote(attrs["gvk"]["subresource"])
+        )
+      end
+    else
+      quote do
+        Req.new()
+        |> Kubereq.attach(
+          context: unquote(attrs["context"]),
+          api_version: unquote(attrs["gvk"]["api_version"]),
+          kind: unquote(attrs["gvk"]["kind"])
+        )
+      end
     end
   end
 
@@ -411,10 +429,18 @@ defmodule KinoK8s.KubernetesClientCell do
     if byte_size(search_term) < 3 do
       []
     else
-      search_terms = String.split(search_term, ~r/\W/)
-
-      ResourceGVKCache.get_gvks(context)
-      |> Enum.filter(fn res -> Enum.all?(search_terms, &String.contains?(res["index"], &1)) end)
+      for gvk <- ResourceGVKCache.get_gvks(context),
+          search_term <- search_term |> String.downcase() |> String.split(~r/\W/),
+          jaro_dist =
+            max(
+              String.jaro_distance(gvk["name"], search_term),
+              if(Enum.member?(List.wrap(gvk["shortNames"]), search_term), do: 1, else: 0)
+            ),
+          jaro_dist > 0.6 do
+        {jaro_dist, gvk}
+      end
+      |> Enum.sort_by(&elem(&1, 0), :desc)
+      |> Enum.map(&elem(&1, 1))
     end
   end
 

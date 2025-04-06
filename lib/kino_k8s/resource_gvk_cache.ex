@@ -83,9 +83,16 @@ defmodule KinoK8s.ResourceGVKCache do
         for group <- resp.body["groups"],
             version <- group["versions"],
             api_version = version["groupVersion"],
-            gvk <- resources("apis/#{api_version}", context) do
+            gvks = resources("apis/#{api_version}", context),
+            gvk <- gvks,
+            gvk_map = Map.new(gvks, &{&1["name"], &1}) do
+          [main_resource | subresources] = String.split(gvk["name"], "/")
+          subresource = Enum.at(subresources, 0)
+          kind = gvk_map[main_resource]["kind"]
+
           Map.merge(gvk, %{
-            "index" => String.replace(api_version, "/", "") <> gvk["name"],
+            "subresource" => subresource,
+            "kind" => kind,
             "api_version" => api_version
           })
         end
@@ -97,12 +104,19 @@ defmodule KinoK8s.ResourceGVKCache do
 
       gvks =
         for api_version <- resp.body["versions"],
-            gvk <- resources("api/#{api_version}", context),
+            gvks = resources("api/#{api_version}", context),
+            gvk <- gvks,
+            gvk_map = Map.new(gvks, &{&1["name"], &1}),
             reduce: gvks do
           gvks ->
+            [main_resource | subresources] = String.split(gvk["name"], "/")
+            subresource = Enum.at(subresources, 0)
+            kind = gvk_map[main_resource]["kind"]
+
             gvk =
               Map.merge(gvk, %{
-                "index" => api_version <> gvk["name"],
+                "subresource" => subresource,
+                "kind" => kind,
                 "api_version" => api_version
               })
 
