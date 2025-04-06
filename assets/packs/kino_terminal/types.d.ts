@@ -1,4 +1,4 @@
-import xterm from 'xterm'
+import xterm from '@xterm/xterm'
 
 export interface KinoTerminalAttrs {
   buffer: string | Uint8Array

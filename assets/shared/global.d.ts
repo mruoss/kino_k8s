@@ -1,5 +1,5 @@
 import React from 'react'
-import { Terminal as TerminalType } from 'xterm'
+import { Terminal as TerminalType } from '@xterm/xterm'
 
 interface RootOptions {
   /**
