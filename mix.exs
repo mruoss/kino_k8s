@@ -2,7 +2,7 @@ defmodule KinoK8s.MixProject do
   use Mix.Project
 
   @source_url "https://github.com/mruoss/kino_k8s"
-  @version "2.0.0"
+  @version "2.1.0"
 
   def project do
     [

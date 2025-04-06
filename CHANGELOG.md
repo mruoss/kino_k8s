@@ -12,6 +12,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 <!--------------------- Don't add new entries after this line --------------------->
 
+
+## [2.1.0] - 2025-04-06
+
+## Changed
+
+* Improve GVK (resource) search in smart cell (#520)[https://github.com/mruoss/kino_k8s/pull/520]
+
+## Chores
+
+Several dependency updates
+
 ## [2.0.0] - 2024-12-13
 
 ## Changed
