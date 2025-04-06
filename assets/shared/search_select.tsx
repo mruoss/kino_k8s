@@ -91,7 +91,7 @@ const SearchResult = <ItemType,>({
   resultItemsKeyField,
 }: SearchResultProps<ItemType>) => {
   return (
-    <div className="max-h-36 overflow-auto rounded-b-lg border-b border-l border-r border-gray-300">
+    <div className="max-h-36 overflow-auto rounded-b-lg border-r border-b border-l border-gray-300">
       <div className="w-max min-w-full">
         {resultItems.map((item) => (
           <div

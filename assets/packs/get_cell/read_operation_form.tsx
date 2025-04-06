@@ -21,7 +21,12 @@ const ReadOperationForm: React.FC<{
       resultItems={fields.search_result_items}
       onSelect={updateField('gvk')}
       itemRenderer={(item: GVK) => <GVKOption gvk={item} />}
-      selectedValue={fields.gvk?.kind}
+      selectedValue={
+        fields.gvk &&
+        fields.gvk.kind +
+          ((fields.gvk.subresource && ` (sub: ${fields.gvk.subresource})`) ||
+            '')
+      }
       placeholder="apps/v1 Deployment"
     />
     {fields.namespaces && (

@@ -7,14 +7,18 @@ defmodule KinoK8s.K8sHelper do
     end
   end
 
-  def resources(req, api_version, kind, namespace) do
+  def resources(req, api_version, kind, namespace, subresource) do
     with {:ok, %{status: 200, body: body}} <-
-           Kubereq.list(req, namespace, api_version: api_version, kind: kind) do
+           Kubereq.list(req, namespace,
+             api_version: api_version,
+             kind: kind,
+             subresource: subresource
+           ) do
       {:ok, get_in(body, ["items", Access.all(), "metadata", "name"])}
     end
   end
 
-  def pods(conn, namespace), do: resources(conn, "v1", "pod", namespace)
+  def pods(conn, namespace), do: resources(conn, "v1", "pod", namespace, nil)
 
   def containers(req, namespace, name) do
     with {:ok, %{status: 200, body: body}} <-
