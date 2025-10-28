@@ -7,7 +7,7 @@
   "devDependencies": {
     "@livebook/kino-bundler": "^0.2.1",
     "@remixicon/react": "^4.1.1",
-    "@types/node": "^22.0.0",
+    "@types/node": "^24.0.0",
     "@types/react": "^19.0.0",
     "@typescript-eslint/eslint-plugin": "^8.0.0",
     "@typescript-eslint/parser": "^8.0.0",
