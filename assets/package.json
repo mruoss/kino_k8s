@@ -20,7 +20,7 @@
   },
   "dependencies": {
     "classnames": "^2.5.1",
-    "esbuild": "^0.25.9",
+    "esbuild": "^0.26.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   }
