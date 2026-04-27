@@ -14,7 +14,7 @@
     "@xterm/xterm": "^6.0.0",
     "eslint": "^10.0.0",
     "prettier": "^3.0.3",
-    "prettier-plugin-tailwindcss": "^0.7.0",
+    "prettier-plugin-tailwindcss": "^0.8.0",
     "tailwindcss": "^4.0.0",
     "typescript": "^6.0.0"
   },
