@@ -2,7 +2,7 @@ env_file = '.env'
 
 [tools]
 node = "26.2.0"
-npm = "11.12.1"
+npm = "11.16.0"
 kind = "0.31.0"
 erlang = "29.0"
 elixir = "1.19.5"
