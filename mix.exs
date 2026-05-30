@@ -13,6 +13,7 @@ defmodule KinoK8s.MixProject do
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       package: package(),
+      test_coverage: [tool: ExCoveralls],
       docs: [
         main: "readme",
         extras: ["README.md", "CHANGELOG.md"],
@@ -33,10 +34,11 @@ defmodule KinoK8s.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:ex_doc, ">= 0.0.0", only: :dev, runtime: false},
       {:kubereq, "~> 0.4.0"},
       {:kino, "~> 0.19.0"},
-      {:ymlr, "~> 5.0"}
+      {:ymlr, "~> 5.0"},
+      {:ex_doc, ">= 0.0.0", only: :dev, runtime: false},
+      {:excoveralls, "~> 0.18", only: :test}
     ]
   end
 
