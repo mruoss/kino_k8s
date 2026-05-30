@@ -1,4 +1,5 @@
-env_file = '.env'
+[env]
+_.file = '.env'
 
 [tools]
 node = "26.2.0"
