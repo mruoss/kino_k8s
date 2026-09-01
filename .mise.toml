@@ -5,5 +5,5 @@ _.file = '.env'
 node = "26.8.1"
 npm = "12.0.2"
 kind = "0.33.0"
-erlang = "29.0.5"
+erlang = "29.0.6"
 elixir = "1.20.4"
