@@ -2,7 +2,7 @@
 _.file = '.env'
 
 [tools]
-node = "26.9.0"
+node = "26.10.0"
 npm = "12.0.2"
 kind = "0.33.0"
 erlang = "29.1.1"
